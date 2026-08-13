@@ -1,7 +1,7 @@
 from github_api import run_graphql_query
 
 REPOS_QUERY = """
-query GetSampleRepos {
+query GetSampleRepos($searchQuery: String!, $limit: Int!) {
   search(
     query: $searchQuery,
     type: REPOSITORY,

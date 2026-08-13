@@ -10,6 +10,8 @@ if str(SRC_DIR) not in sys.path:
 import pandas as pd
 from collectors.repositories import fetch_repositories
 
+from collectors.rq01 import process_rq01
+from collectors.rq02 import process_rq02
 
 def main():
     SEARCH_QUERY = "stars:>1000 sort:stars-desc"
@@ -28,8 +30,15 @@ def main():
     for repo in repos:
         name = repo["nameWithOwner"]
 
+        rq01_data = process_rq01(repo["createdAt"])
+        prs_aceitas = process_rq02(repo.get("mergedPRs"))
+
 
         lista_dados.append({
+            "nome": name,
+            "idade_anos": rq01_data["idade_anos"],
+            "idade_dias": rq01_data["idade_dias"],
+            "prs_aceitas": prs_aceitas,
         })
 
     df = pd.DataFrame(lista_dados)
@@ -37,6 +46,21 @@ def main():
     print("=" * 60)
     print("RELATÓRIO FINAL DE ANÁLISE DAS RQs")
     print("=" * 60)
+
+
+
+    print("\n --- RQ 01: Idade dos Repositórios ---")
+    print(
+        f"Média: {df['idade_anos'].mean():.2f} anos | Mediana:"
+        f" {df['idade_anos'].median():.2f} anos"
+    )
+
+    print("\n --- RQ 02: PRs Aceitas (Merged) ---")
+    print(
+        f"Média: {df['prs_aceitas'].mean():.2f} | Mediana:"
+        f" {df['prs_aceitas'].median():.0f}"
+    )
+
 
 
     csv_path = BASE_DIR / "dados_repositorios_github.csv"
