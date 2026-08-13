@@ -15,6 +15,7 @@ query GetSampleRepos($searchQuery: String!, $limit: Int!) {
         primaryLanguage {
           name
         }
+        stargazerCount
         mergedPRs: pullRequests(states: MERGED) {
           totalCount
         }
