@@ -12,18 +12,40 @@ from collectors.repositories import fetch_repositories
 
 from collectors.rq01 import process_rq01
 from collectors.rq02 import process_rq02
+from collectors.rq05 import process_rq05
+from collectors.rq06 import process_rq06
+from collectors.rq07 import process_rq07
+
+
+DEFAULT_SEARCH_QUERY = "stars:>1000 sort:stars-desc"
+DEFAULT_SAMPLE_LIMIT = 10
+
+
+def get_search_params():
+    if len(sys.argv) > 1:
+        search_query = sys.argv[1]
+    else:
+        search_query = DEFAULT_SEARCH_QUERY
+
+    if len(sys.argv) > 2:
+        sample_limit = int(sys.argv[2])
+    else:
+        sample_limit = DEFAULT_SAMPLE_LIMIT
+
+    return search_query, sample_limit
+
 
 def main():
-    SEARCH_QUERY = "stars:>1000 sort:stars-desc"
-    print(f"Iniciando a busca no GitHub com a query: '{SEARCH_QUERY}'...")
+    search_query, sample_limit = get_search_params()
+    print(f"Iniciando a busca no GitHub com a query: '{search_query}'...")
 
-    repos = fetch_repositories(search_query=SEARCH_QUERY, limit=100)
+    repos = fetch_repositories(search_query=search_query, limit=sample_limit)
 
     if not repos:
-        print("Nenhum repositório retornado.")
+        print("Nenhum repositorio retornado.")
         return
 
-    print(f"{len(repos)} repositórios encontrados. Processando métricas...\n")
+    print(f"{len(repos)} repositorios encontrados. Processando metricas...\n")
 
     lista_dados = []
 
@@ -32,36 +54,54 @@ def main():
 
         rq01_data = process_rq01(repo["createdAt"])
         prs_aceitas = process_rq02(repo.get("mergedPRs"))
-
+        linguagem = process_rq05(repo.get("primaryLanguage"))
+        estrelas = process_rq06(repo.get("stargazerCount"))
+        issues_data = process_rq07(repo.get("totalIssues"), repo.get("closedIssues"))
 
         lista_dados.append({
             "nome": name,
             "idade_anos": rq01_data["idade_anos"],
             "idade_dias": rq01_data["idade_dias"],
             "prs_aceitas": prs_aceitas,
+            "linguagem": linguagem,
+            "estrelas": estrelas,
+            "total_issues": issues_data["total_issues"],
+            "issues_fechadas": issues_data["issues_fechadas"],
+            "percentual_issues_fechadas": issues_data["percentual_issues_fechadas"],
         })
 
     df = pd.DataFrame(lista_dados)
 
     print("=" * 60)
-    print("RELATÓRIO FINAL DE ANÁLISE DAS RQs")
+    print("RELATORIO FINAL DE ANALISE DAS RQs")
     print("=" * 60)
 
-
-
-    print("\n --- RQ 01: Idade dos Repositórios ---")
+    print("\n --- RQ 01: Idade dos Repositorios ---")
     print(
-        f"Média: {df['idade_anos'].mean():.2f} anos | Mediana:"
+        f"Media: {df['idade_anos'].mean():.2f} anos | Mediana:"
         f" {df['idade_anos'].median():.2f} anos"
     )
 
     print("\n --- RQ 02: PRs Aceitas (Merged) ---")
     print(
-        f"Média: {df['prs_aceitas'].mean():.2f} | Mediana:"
+        f"Media: {df['prs_aceitas'].mean():.2f} | Mediana:"
         f" {df['prs_aceitas'].median():.0f}"
     )
 
+    print("\n --- RQ 05: Linguagens Primarias ---")
+    print(df["linguagem"].value_counts().to_string())
 
+    print("\n --- RQ 06: Estrelas ---")
+    print(
+        f"Media: {df['estrelas'].mean():.2f} | Mediana:"
+        f" {df['estrelas'].median():.0f}"
+    )
+
+    print("\n --- RQ 07 Bonus: Issues ---")
+    print(
+        f"Total medio de issues: {df['total_issues'].mean():.2f} | "
+        f"Issues fechadas em media: {df['percentual_issues_fechadas'].mean():.2f}%"
+    )
 
     csv_path = BASE_DIR / "dados_repositorios_github.csv"
     df.to_csv(csv_path, index=False)
