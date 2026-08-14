@@ -12,6 +12,8 @@ from collectors.repositories import fetch_repositories
 
 from collectors.rq01 import process_rq01
 from collectors.rq02 import process_rq02
+from collectors.rq03 import process_rq03
+from collectors.rq04 import process_rq04
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
@@ -54,6 +56,8 @@ def main():
 
         rq01_data = process_rq01(repo["createdAt"])
         prs_aceitas = process_rq02(repo.get("mergedPRs"))
+        releasesCount = process_rq03(repo)
+        lastUpdate = process_rq04(repo)
         linguagem = process_rq05(repo.get("primaryLanguage"))
         estrelas = process_rq06(repo.get("stargazerCount"))
         issues_data = process_rq07(repo.get("totalIssues"), repo.get("closedIssues"))
@@ -62,6 +66,8 @@ def main():
             "nome": name,
             "idade_anos": rq01_data["idade_anos"],
             "idade_dias": rq01_data["idade_dias"],
+            "contagem_releases": releasesCount,
+            "ultima_atualizacao": lastUpdate,
             "prs_aceitas": prs_aceitas,
             "linguagem": linguagem,
             "estrelas": estrelas,
@@ -86,6 +92,18 @@ def main():
     print(
         f"Media: {df['prs_aceitas'].mean():.2f} | Mediana:"
         f" {df['prs_aceitas'].median():.0f}"
+    )
+
+    print("\n --- RQ 03: Contagem de Releases ---")
+    print(
+        f"Media: {df['contagem_releases'].mean():.2f} | Mediana:"
+        f" {df['contagem_releases'].median():.0f}"
+    )
+
+    print("\n --- RQ 04: Ultima Atualizacao ---")
+    print(
+        f"Media: {df['ultima_atualizacao'].mean():.2f} dias | Mediana:"
+        f" {df['ultima_atualizacao'].median():.0f} dias"
     )
 
     print("\n --- RQ 05: Linguagens Primarias ---")
