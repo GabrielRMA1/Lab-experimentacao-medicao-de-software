@@ -19,8 +19,8 @@ from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
 
 
-DEFAULT_SEARCH_QUERY = "stars:>1000 sort:stars-desc"
-DEFAULT_SAMPLE_LIMIT = 10
+DEFAULT_SEARCH_QUERY = "science OR machine-learning OR deep-learning OR artificial-intelligence OR data-science OR computer-vision stars:>1000 sort:stars-desc"
+DEFAULT_SAMPLE_LIMIT = 1000
 
 
 def get_search_params():
