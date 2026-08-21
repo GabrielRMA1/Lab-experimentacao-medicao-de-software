@@ -11,6 +11,8 @@ if str(SRC_DIR) not in sys.path:
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
+from analysis_rq05_rq06_rq07 import get_iqr_outliers
+from project_v2_snapshot import get_status, normalize_item
 
 
 class TestCollectors(unittest.TestCase):
@@ -37,6 +39,49 @@ class TestCollectors(unittest.TestCase):
         result = process_rq07({"totalCount": 0}, {"totalCount": 0})
 
         self.assertEqual(result["percentual_issues_fechadas"], 0)
+
+    def test_get_iqr_outliers_counts_extreme_values(self):
+        import pandas as pd
+
+        df = pd.DataFrame({"estrelas": [10, 11, 12, 13, 1000]})
+        result = get_iqr_outliers(df, "estrelas")
+
+        self.assertEqual(result["outliers"], 1)
+
+    def test_project_v2_status_is_extracted_from_status_field(self):
+        item = {
+            "fieldValues": {
+                "nodes": [
+                    {"name": "Alta", "field": {"name": "Prioridade"}},
+                    {"name": "In progress", "field": {"name": "Status"}},
+                ]
+            }
+        }
+
+        self.assertEqual(get_status(item), "In progress")
+
+    def test_project_v2_item_is_normalized_for_csv(self):
+        item = {
+            "id": "PVTI_123",
+            "type": "ISSUE",
+            "content": {
+                "title": "Criar coleta",
+                "number": 7,
+                "state": "OPEN",
+                "url": "https://github.com/a/b/issues/7",
+                "repository": {"nameWithOwner": "a/b"},
+            },
+            "fieldValues": {
+                "nodes": [{"name": "Done", "field": {"name": "Status"}}]
+            },
+        }
+
+        row = normalize_item("Lab Project", item)
+
+        self.assertEqual(row["project"], "Lab Project")
+        self.assertEqual(row["title"], "Criar coleta")
+        self.assertEqual(row["status"], "Done")
+        self.assertEqual(row["repository"], "a/b")
 
 
 if __name__ == "__main__":
