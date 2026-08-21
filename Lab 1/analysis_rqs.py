@@ -6,10 +6,15 @@ import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_INPUT = BASE_DIR / "dados_repositorios_github.csv"
-DEFAULT_OUTPUT = BASE_DIR / "analise_rq05_rq06_rq07.md"
+DEFAULT_OUTPUT = BASE_DIR / "analise_rqs.md"
 
 LANGUAGE_COLUMN = "linguagem"
 NUMERIC_COLUMNS = [
+    "idade_anos",
+    "idade_dias",
+    "prs_aceitas",
+    "contagem_releases",
+    "ultima_atualizacao",
     "estrelas",
     "total_issues",
     "issues_fechadas",
@@ -59,6 +64,20 @@ def format_number(value):
     return f"{value:.2f}"
 
 
+def describe_column(df, column):
+    values = pd.to_numeric(df[column], errors="coerce").dropna()
+
+    if values.empty:
+        return None
+
+    return {
+        "mean": values.mean(),
+        "median": values.median(),
+        "minimum": values.min(),
+        "maximum": values.max(),
+    }
+
+
 def build_report(df):
     total_repos = len(df)
     lines = [
@@ -81,6 +100,25 @@ def build_report(df):
     if language_nulls is not None:
         lines.append(f"- linguagem marcada como 'Nao informada': {language_nulls}")
 
+    lines.extend(["", "## Estatisticas descritivas", ""])
+
+    for column in NUMERIC_COLUMNS:
+        if column not in df.columns:
+            lines.append(f"- {column}: coluna nao encontrada")
+            continue
+
+        result = describe_column(df, column)
+        if result is None:
+            lines.append(f"- {column}: sem valores numericos")
+            continue
+
+        lines.append(
+            f"- {column}: media {format_number(result['mean'])}, "
+            f"mediana {format_number(result['median'])}, "
+            f"minimo {format_number(result['minimum'])}, "
+            f"maximo {format_number(result['maximum'])}"
+        )
+
     lines.extend(["", "## Outliers por IQR", ""])
 
     for column in NUMERIC_COLUMNS:
@@ -96,6 +134,26 @@ def build_report(df):
         )
 
     lines.extend(["", "## Hipoteses informais", ""])
+    lines.append(
+        "- RQ01: repositorios populares tendem a ser mais antigos e maduros, "
+        "mas uma distribuicao assimetrica pode indicar que poucos projetos "
+        "muito antigos concentram grande parte da idade observada."
+    )
+    lines.append(
+        "- RQ02: repositorios populares tendem a receber contribuicoes externas "
+        "por meio de pull requests mescladas. Valores muito altos podem estar "
+        "concentrados em poucos projetos com comunidades maiores."
+    )
+    lines.append(
+        "- RQ03: a quantidade de releases pode indicar frequencia de entrega e "
+        "maturidade, embora projetos com estrategias de versionamento diferentes "
+        "nao sejam diretamente comparaveis."
+    )
+    lines.append(
+        "- RQ04: poucos dias desde a ultima atualizacao sugerem atividade recente. "
+        "Projetos arquivados, sazonais ou com baixa frequencia de commits podem "
+        "aparecer como pouco ativos mesmo quando continuam relevantes."
+    )
     lines.append(
         "- RQ05: a distribuicao de linguagens tende a ser concentrada em poucas "
         "linguagens populares. Repositorios sem linguagem principal podem indicar "
