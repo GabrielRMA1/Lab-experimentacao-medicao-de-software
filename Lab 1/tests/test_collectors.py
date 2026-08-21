@@ -11,7 +11,7 @@ if str(SRC_DIR) not in sys.path:
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
-from analysis_rq05_rq06_rq07 import get_iqr_outliers
+from analysis_rqs import get_iqr_outliers
 from project_v2_snapshot import get_status, normalize_item
 
 
