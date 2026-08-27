@@ -17,6 +17,7 @@ from collectors.rq04 import process_rq04
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
+from collectors.rq08ProporçãoDeIssuesEmRelacaoAComunidade import process_rq08
 
 
 DEFAULT_SEARCH_QUERY = "science OR machine-learning OR deep-learning OR artificial-intelligence OR data-science OR computer-vision stars:>1000 sort:stars-desc"
@@ -61,6 +62,7 @@ def main():
         linguagem = process_rq05(repo.get("primaryLanguage"))
         estrelas = process_rq06(repo.get("stargazerCount"))
         issues_data = process_rq07(repo.get("totalIssues"), repo.get("closedIssues"))
+        issues_por_estrela = process_rq08(issues_data["total_issues"], estrelas)
 
         lista_dados.append({
             "nome": name,
@@ -74,6 +76,7 @@ def main():
             "total_issues": issues_data["total_issues"],
             "issues_fechadas": issues_data["issues_fechadas"],
             "percentual_issues_fechadas": issues_data["percentual_issues_fechadas"],
+            "issues_por_estrela": issues_por_estrela,
         })
 
     df = pd.DataFrame(lista_dados)
@@ -119,6 +122,12 @@ def main():
     print(
         f"Total medio de issues: {df['total_issues'].mean():.2f} | "
         f"Issues fechadas em media: {df['percentual_issues_fechadas'].mean():.2f}%"
+    )
+
+    print("\n --- RQ 08: Issues por Estrela (Atrito vs Popularidade) ---")
+    print(
+    f"Media: {df['issues_por_estrela'].mean():.4f} | Mediana:"
+    f" {df['issues_por_estrela'].median():.4f}"
     )
 
     csv_path = BASE_DIR / "dados_repositorios_github.csv"
