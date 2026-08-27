@@ -17,6 +17,7 @@ from collectors.rq04 import process_rq04
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
+from collectors.rq08 import process_rq08
 
 
 DEFAULT_SEARCH_QUERY = "science OR machine-learning OR deep-learning OR artificial-intelligence OR data-science OR computer-vision stars:>1000 sort:stars-desc"
@@ -61,6 +62,9 @@ def main():
         linguagem = process_rq05(repo.get("primaryLanguage"))
         estrelas = process_rq06(repo.get("stargazerCount"))
         issues_data = process_rq07(repo.get("totalIssues"), repo.get("closedIssues"))
+        atividade_continuada = process_rq08(
+            repo.get("createdAt"), repo.get("pushedAt")
+        )
 
         lista_dados.append({
             "nome": name,
@@ -74,6 +78,7 @@ def main():
             "total_issues": issues_data["total_issues"],
             "issues_fechadas": issues_data["issues_fechadas"],
             "percentual_issues_fechadas": issues_data["percentual_issues_fechadas"],
+            "tempo_atividade_continuada_dias": atividade_continuada,
         })
 
     df = pd.DataFrame(lista_dados)
@@ -120,6 +125,12 @@ def main():
         f"Total medio de issues: {df['total_issues'].mean():.2f} | "
         f"Issues fechadas em media: {df['percentual_issues_fechadas'].mean():.2f}%"
     )
+
+    print("\n --- RQ 08 Bonus: Tempo de Atividade Continuada ---")
+    print(
+            f"Media: {df['tempo_atividade_continuada_dias'].mean():.2f} dias | Mediana:"
+            f" {df['tempo_atividade_continuada_dias'].median():.0f} dias"
+        )
 
     csv_path = BASE_DIR / "dados_repositorios_github.csv"
     df.to_csv(csv_path, index=False)

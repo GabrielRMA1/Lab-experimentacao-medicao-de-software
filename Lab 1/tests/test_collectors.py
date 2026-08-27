@@ -11,6 +11,7 @@ if str(SRC_DIR) not in sys.path:
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
+from collectors.rq08 import process_rq08
 from analysis_rqs import get_iqr_outliers
 from project_v2_snapshot import get_status, normalize_item
 
@@ -39,6 +40,14 @@ class TestCollectors(unittest.TestCase):
         result = process_rq07({"totalCount": 0}, {"totalCount": 0})
 
         self.assertEqual(result["percentual_issues_fechadas"], 0)
+
+    def test_process_rq08_calculates_continuous_activity_time(self):
+        result = process_rq08("2020-01-01T00:00:00Z", "2020-01-11T12:00:00Z")
+
+        self.assertEqual(result, 10.5)
+
+    def test_process_rq08_handles_missing_pushed_at(self):
+        self.assertIsNone(process_rq08("2020-01-01T00:00:00Z", None))
 
     def test_get_iqr_outliers_counts_extreme_values(self):
         import pandas as pd

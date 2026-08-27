@@ -19,6 +19,7 @@ NUMERIC_COLUMNS = [
     "total_issues",
     "issues_fechadas",
     "percentual_issues_fechadas",
+    "tempo_atividade_continuada_dias",
 ]
 
 
