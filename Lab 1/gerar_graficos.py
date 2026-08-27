@@ -20,6 +20,7 @@ def carregar_dados(csv_path: Path) -> pd.DataFrame:
         "nome", "idade_anos", "idade_dias", "contagem_releases",
         "ultima_atualizacao", "prs_aceitas", "linguagem", "estrelas",
         "total_issues", "issues_fechadas", "percentual_issues_fechadas",
+        "tempo_atividade_continuada_dias",
     ]
     faltando = [c for c in colunas_esperadas if c not in df.columns]
     if faltando:
@@ -94,6 +95,17 @@ def plot_rq04(df):
         xlabel="Dias desde a última atualização",
         cor="#8172B2",
         nome_arquivo="rq04_ultima_atualizacao.png",
+    )
+
+
+def plot_atividade_continuada(df):
+    hist_e_boxplot(
+        df, "tempo_atividade_continuada_dias",
+        titulo_geral="Tempo Medio de Atividade Continuada",
+        titulo_hist="Distribuicao do Tempo entre Criacao e Ultima Atividade",
+        xlabel="Tempo de atividade continuada (dias)",
+        cor="#64B5CD",
+        nome_arquivo="tempo_atividade_continuada.png",
     )
 
 
@@ -179,6 +191,7 @@ def main():
     plot_rq02(df)
     plot_rq03(df)
     plot_rq04(df)
+    plot_atividade_continuada(df)
     plot_rq05(df)
     plot_rq06(df)
     plot_rq07(df)
