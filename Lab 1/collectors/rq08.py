@@ -1,12 +1,12 @@
-from datetime import datetime
+def process_rq08(total_issues: int, stargazer_count: int) -> float:
+    """Calcula a proporcao de issues em relacao ao tamanho da comunidade
+    (issues por estrela). Mede o "atrito"/demanda de suporte relativo
+    a popularidade do repositorio."""
+    total_issues = total_issues or 0
+    stargazer_count = stargazer_count or 0
 
-
-def process_rq08(created_at_str: str, pushed_at_str: str):
-    """Calcula em dias o periodo entre a criacao e a ultima atividade."""
-    if not created_at_str or not pushed_at_str:
+    if stargazer_count == 0:
         return None
 
-    created_at = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
-    pushed_at = datetime.fromisoformat(pushed_at_str.replace("Z", "+00:00"))
-
-    return (pushed_at - created_at).total_seconds() / 86400
+    razao = round(total_issues / stargazer_count, 4)
+    return razao

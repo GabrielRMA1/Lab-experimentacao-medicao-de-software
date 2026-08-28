@@ -20,6 +20,8 @@ NUMERIC_COLUMNS = [
     "issues_fechadas",
     "percentual_issues_fechadas",
     "tempo_atividade_continuada_dias",
+    "issues_por_estrela",
+    "proporcao_contribuicoes_externas",
 ]
 
 
@@ -82,7 +84,7 @@ def describe_column(df, column):
 def build_report(df):
     total_repos = len(df)
     lines = [
-        "# Analise RQ05, RQ06 e RQ07",
+        "# Analise das RQs",
         "",
         f"Total de repositorios analisados: {total_repos}",
         "",
@@ -170,6 +172,13 @@ def build_report(df):
         "- RQ07: muitos issues ou alto percentual de issues fechadas podem indicar "
         "projetos grandes e maduros, mas tambem processos diferentes de triagem. "
         "Repositorios com poucas issues podem distorcer percentuais."
+    )
+    lines.append(
+        "- RQ10: uma maior proporcao de PRs merged por issue fechada pode sugerir "
+        "um fluxo de contribuicoes mais aberto e maduro. A metrica usa todas as "
+        "PRs merged, portanto nao identifica com precisao se o autor e externo "
+        "a equipe do repositorio; repositorios sem issues fechadas nao possuem "
+        "razao calculavel."
     )
 
     if LANGUAGE_COLUMN in df.columns:
