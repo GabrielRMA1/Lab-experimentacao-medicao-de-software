@@ -17,8 +17,9 @@ from collectors.rq04 import process_rq04
 from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
-from collectors.rq08ProporçãoDeIssuesEmRelacaoAComunidade import process_rq08
+from collectors.rq08 import process_rq08
 from collectors.rq09 import process_rq09
+from collectors.rq10 import process_rq10
 
 
 DEFAULT_SEARCH_QUERY = "science OR machine-learning OR deep-learning OR artificial-intelligence OR data-science OR computer-vision stars:>1000 sort:stars-desc"
@@ -67,6 +68,9 @@ def main():
         atividade_continuada = process_rq09(
             repo.get("createdAt"), repo.get("pushedAt")
         )
+        proporcao_contribuicoes_externas = process_rq10(
+            prs_aceitas, issues_data["issues_fechadas"]
+        )
 
         lista_dados.append({
             "nome": name,
@@ -82,6 +86,7 @@ def main():
             "percentual_issues_fechadas": issues_data["percentual_issues_fechadas"],
             "issues_por_estrela": issues_por_estrela,
             "tempo_atividade_continuada_dias": atividade_continuada,
+            "proporcao_contribuicoes_externas": proporcao_contribuicoes_externas,
         })
 
     df = pd.DataFrame(lista_dados)
@@ -140,6 +145,13 @@ def main():
             f"Media: {df['tempo_atividade_continuada_dias'].mean():.2f} dias | Mediana:"
             f" {df['tempo_atividade_continuada_dias'].median():.0f} dias"
         )
+
+    print("\n --- RQ 10: Proporcao de Contribuicoes Externas ---")
+    print(
+        "PRs merged por issue fechada - "
+        f"Media: {df['proporcao_contribuicoes_externas'].mean():.4f} | Mediana:"
+        f" {df['proporcao_contribuicoes_externas'].median():.4f}"
+    )
 
     csv_path = BASE_DIR / "dados_repositorios_github.csv"
     df.to_csv(csv_path, index=False)

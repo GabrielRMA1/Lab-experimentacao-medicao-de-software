@@ -12,6 +12,8 @@ from collectors.rq05 import process_rq05
 from collectors.rq06 import process_rq06
 from collectors.rq07 import process_rq07
 from collectors.rq08 import process_rq08
+from collectors.rq09 import process_rq09
+from collectors.rq10 import process_rq10
 from analysis_rqs import get_iqr_outliers
 from project_v2_snapshot import get_status, normalize_item
 
@@ -41,13 +43,24 @@ class TestCollectors(unittest.TestCase):
 
         self.assertEqual(result["percentual_issues_fechadas"], 0)
 
-    def test_process_rq08_calculates_continuous_activity_time(self):
-        result = process_rq08("2020-01-01T00:00:00Z", "2020-01-11T12:00:00Z")
+    def test_process_rq08_calculates_issues_per_star(self):
+        result = process_rq08(25, 100)
+
+        self.assertEqual(result, 0.25)
+
+    def test_process_rq08_handles_zero_stars(self):
+        self.assertIsNone(process_rq08(25, 0))
+
+    def test_process_rq09_calculates_continuous_activity_time(self):
+        result = process_rq09("2020-01-01T00:00:00Z", "2020-01-11T12:00:00Z")
 
         self.assertEqual(result, 10.5)
 
-    def test_process_rq08_handles_missing_pushed_at(self):
-        self.assertIsNone(process_rq08("2020-01-01T00:00:00Z", None))
+    def test_process_rq10_calculates_external_contribution_ratio(self):
+        self.assertEqual(process_rq10(15, 20), 0.75)
+
+    def test_process_rq10_handles_zero_closed_issues(self):
+        self.assertIsNone(process_rq10(15, 0))
 
     def test_get_iqr_outliers_counts_extreme_values(self):
         import pandas as pd

@@ -20,7 +20,8 @@ def carregar_dados(csv_path: Path) -> pd.DataFrame:
         "nome", "idade_anos", "idade_dias", "contagem_releases",
         "ultima_atualizacao", "prs_aceitas", "linguagem", "estrelas",
         "total_issues", "issues_fechadas", "percentual_issues_fechadas",
-        "tempo_atividade_continuada_dias",
+        "issues_por_estrela", "tempo_atividade_continuada_dias",
+        "proporcao_contribuicoes_externas",
     ]
     faltando = [c for c in colunas_esperadas if c not in df.columns]
     if faltando:
@@ -98,17 +99,6 @@ def plot_rq04(df):
     )
 
 
-def plot_atividade_continuada(df):
-    hist_e_boxplot(
-        df, "tempo_atividade_continuada_dias",
-        titulo_geral="Tempo Medio de Atividade Continuada",
-        titulo_hist="Distribuicao do Tempo entre Criacao e Ultima Atividade",
-        xlabel="Tempo de atividade continuada (dias)",
-        cor="#64B5CD",
-        nome_arquivo="tempo_atividade_continuada.png",
-    )
-
-
 def plot_rq05(df):
     contagem = df["linguagem"].value_counts()
 
@@ -176,6 +166,28 @@ def plot_rq07(df, top_n_linguagens=8):
     print(f"Resumo estatístico por linguagem salvo em: {resumo_path}")
 
 
+def plot_rq09(df):
+    hist_e_boxplot(
+        df, "tempo_atividade_continuada_dias",
+        titulo_geral="Tempo Medio de Atividade Continuada",
+        titulo_hist="Distribuicao do Tempo entre Criacao e Ultima Atividade",
+        xlabel="Tempo de atividade continuada (dias)",
+        cor="#64B5CD",
+        nome_arquivo="tempo_atividade_continuada.png",
+    )
+
+
+def plot_rq10(df):
+    hist_e_boxplot(
+        df, "proporcao_contribuicoes_externas",
+        titulo_geral="RQ10: Proporcao de Contribuicoes Externas",
+        titulo_hist="Distribuicao de PRs Merged por Issue Fechada",
+        xlabel="PRs merged / issues fechadas",
+        cor="#DD8452",
+        nome_arquivo="rq10_proporcao_contribuicoes_externas.png",
+    )
+
+
 def main():
     csv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else CSV_PATH_PADRAO
 
@@ -191,10 +203,12 @@ def main():
     plot_rq02(df)
     plot_rq03(df)
     plot_rq04(df)
-    plot_atividade_continuada(df)
     plot_rq05(df)
     plot_rq06(df)
     plot_rq07(df)
+    plot_rq09(df)
+    if "proporcao_contribuicoes_externas" in df.columns:
+        plot_rq10(df)
 
     print(f"\nTodos os gráficos foram salvos em: {OUTPUT_DIR}")
 
