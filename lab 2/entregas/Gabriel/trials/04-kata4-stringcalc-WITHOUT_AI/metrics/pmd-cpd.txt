@@ -1,0 +1,6 @@
+Found a 1 line (10 tokens) duplication in the following files: 
+Starting at line 27 of /workspace/experimento/entregas/P1-gabriel/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+Starting at line 36 of /workspace/experimento/entregas/P1-gabriel/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+
+                if (!negatives.isEmpty()) {
+
