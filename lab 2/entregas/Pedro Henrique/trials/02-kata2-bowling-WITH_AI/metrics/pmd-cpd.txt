@@ -1,0 +1,7 @@
+Found a 2 line (12 tokens) duplication in the following files: 
+Starting at line 15 of /workspace/experimento/entregas/P3-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+Starting at line 22 of /workspace/experimento/entregas/P3-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+
+            if (strike(t)) {
+                score = score + 10 + throwsInGame[t + 1] + throwsInGame[t + 2];
+

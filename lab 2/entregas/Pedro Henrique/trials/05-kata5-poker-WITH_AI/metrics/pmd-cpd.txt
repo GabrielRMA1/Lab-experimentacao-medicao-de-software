@@ -1,0 +1,28 @@
+Found a 7 line (30 tokens) duplication in the following files: 
+Starting at line 76 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+Starting at line 96 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+
+            int count = 0;
+            for (Card b : cards) {
+                if (a.rank == b.rank) {
+                    count++;
+                }
+            }
+            if (count > max) {
+
+=====================================================================
+Found a 2 line (13 tokens) duplication in the following files: 
+Starting at line 8 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+Starting at line 22 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+
+    public static String evaluate(String[] cards) {
+        List<Card> parsed = parseCards(cards);
+
+=====================================================================
+Found a 2 line (10 tokens) duplication in the following files: 
+Starting at line 74 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+Starting at line 91 of /workspace/experimento/entregas/P3-integrante/trials/05-kata5-poker-WITH_AI/src/main/java/PokerHand.java
+
+        int max = 0;
+        for (Card a : cards) {
+
