@@ -1,0 +1,16 @@
+Found a 2 line (13 tokens) duplication in the following files: 
+Starting at line 13 of /workspace/experimento/entregas/P2-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+Starting at line 16 of /workspace/experimento/entregas/P2-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+
+            if (isStrike(cursor)) {
+                total += 10 + bonus(cursor + 1) + bonus(cursor + 2);
+
+=====================================================================
+Found a 2 line (10 tokens) duplication in the following files: 
+Starting at line 27 of /workspace/experimento/entregas/P2-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+Starting at line 31 of /workspace/experimento/entregas/P2-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+Starting at line 35 of /workspace/experimento/entregas/P2-integrante/trials/02-kata2-bowling-WITH_AI/src/main/java/BowlingGame.java
+
+    private boolean isStrike(int index) {
+        return pinsAt(index) == 10;
+

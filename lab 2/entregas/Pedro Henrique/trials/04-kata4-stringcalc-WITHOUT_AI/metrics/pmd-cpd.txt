@@ -1,0 +1,14 @@
+Found a 1 line (15 tokens) duplication in the following files: 
+Starting at line 47 of /workspace/experimento/entregas/P3-integrante/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+Starting at line 63 of /workspace/experimento/entregas/P3-integrante/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+
+        for (int i = 0; i < values.length; i++) {
+
+=====================================================================
+Found a 2 line (10 tokens) duplication in the following files: 
+Starting at line 30 of /workspace/experimento/entregas/P3-integrante/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+Starting at line 62 of /workspace/experimento/entregas/P3-integrante/trials/04-kata4-stringcalc-WITHOUT_AI/src/main/java/StringCalculator.java
+
+        int count = 0;
+        for (int i = 0; i < tokens.length; i++) {
+

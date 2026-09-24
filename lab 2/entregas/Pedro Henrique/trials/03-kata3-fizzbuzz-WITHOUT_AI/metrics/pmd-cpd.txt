@@ -1,0 +1,6 @@
+Found a 1 line (13 tokens) duplication in the following files: 
+Starting at line 4 of /workspace/experimento/entregas/P3-integrante/trials/03-kata3-fizzbuzz-WITHOUT_AI/src/main/java/CustomFizzBuzz.java
+Starting at line 16 of /workspace/experimento/entregas/P3-integrante/trials/03-kata3-fizzbuzz-WITHOUT_AI/src/main/java/CustomFizzBuzz.java
+
+    public static String evaluate(int number, Map<Integer, String> rules) {
+

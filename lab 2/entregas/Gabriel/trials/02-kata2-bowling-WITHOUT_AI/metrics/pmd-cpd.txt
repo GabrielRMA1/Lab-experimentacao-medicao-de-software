@@ -1,0 +1,14 @@
+Found a 2 line (13 tokens) duplication in the following files: 
+Starting at line 16 of /workspace/experimento/entregas/P1-gabriel/trials/02-kata2-bowling-WITHOUT_AI/src/main/java/BowlingGame.java
+Starting at line 19 of /workspace/experimento/entregas/P1-gabriel/trials/02-kata2-bowling-WITHOUT_AI/src/main/java/BowlingGame.java
+
+            if (rolls[i] == 10) {
+                total += 10 + rolls[i + 1] + rolls[i + 2];
+
+=====================================================================
+Found a 1 line (11 tokens) duplication in the following files: 
+Starting at line 19 of /workspace/experimento/entregas/P1-gabriel/trials/02-kata2-bowling-WITHOUT_AI/src/main/java/BowlingGame.java
+Starting at line 23 of /workspace/experimento/entregas/P1-gabriel/trials/02-kata2-bowling-WITHOUT_AI/src/main/java/BowlingGame.java
+
+            } else if (rolls[i] + rolls[i + 1] == 10) {
+

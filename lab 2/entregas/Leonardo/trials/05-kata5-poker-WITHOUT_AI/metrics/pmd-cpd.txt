@@ -1,0 +1,7 @@
+Found a 2 line (10 tokens) duplication in the following files: 
+Starting at line 18 of /workspace/experimento/entregas/P2-integrante/trials/05-kata5-poker-WITHOUT_AI/src/main/java/PokerHand.java
+Starting at line 20 of /workspace/experimento/entregas/P2-integrante/trials/05-kata5-poker-WITHOUT_AI/src/main/java/PokerHand.java
+
+            if (current == null) {
+                counts.put(ranks[i], 1);
+
