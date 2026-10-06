@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+
+# Generated data/cache
+data/cache/*
+!data/cache/.gitkeep
+data/repositories.json
+data/funnel.json
