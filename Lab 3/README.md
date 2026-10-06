@@ -66,10 +66,44 @@ A execução salva:
 
 ## Estrutura
 
-- `src/collectors/repositories.py`: seleção e metadados dos repositórios.
-- `src/main.py`: ponto de entrada do pipeline.
+- `src/collectors/repositories.py`: **coleta** (seleção, metadados, releases, commits, workflow runs).
+- `src/metricas/lead_time.py`: **cálculo** do Lead Time (RQ 02).
+- `src/main.py`: ponto de entrada do pipeline de coleta.
 - `tests/`: testes unitários.
 - `data/cache/`: espaço reservado para cache/retomada das próximas etapas.
+
+## Lead Time (RQ 02)
+ 
+Regras (definição operacional do enunciado, seção 5/RQ 02):
+ 
+- Entrega = `published_at` da release R. Início = `commit.author.date`.
+- **(a) por release:** data de R − commit mais antigo de R; valor do repositório = mediana entre as releases.
+- **(b) por commit:** data de R − data de cada commit; valor do repositório = mediana de todos os commits.
+- Unidade: **horas**. Também são salvos Q1 e Q3 (para o IQR).
+- A primeira release (sem release anterior) não gera intervalo e fica fora.
+- Release sem commits válidos: não entra na mediana e é contada em `n_releases_sem_commits`.
+- Commit sem data, ou com data posterior à release: ignorado e contado em `n_commits_invalidos`.
+- Mesmo `sha` em duas releases: contado só na primeira (`n_commits_duplicados`).
+Como rodar (a partir da pasta `Lab 3`, depois da coleta):
+ 
+```powershell
+python -m src.metricas.lead_time          # gera data/results/lead_time.csv e .json
+pytest --cov=src.metricas --cov-report=term-missing
+```
+ 
+A execução salva `data/results/lead_time.csv` e `data/results/lead_time.json`.
+ 
+### Dicionário de dados (`data/results/lead_time.csv`)
+ 
+| Coluna | Unidade | Origem |
+|---|---|---|
+| `full_name` | texto | dono/repositório |
+| `n_releases_avaliadas` | contagem | releases com ao menos 1 commit válido |
+| `n_releases_sem_commits` / `n_releases_sem_data` / `n_releases_fora_janela` | contagem | releases descartadas do cálculo, por motivo |
+| `n_commits` / `n_commits_invalidos` / `n_commits_duplicados` | contagem | commits usados / ignorados |
+| `lead_time_release_mediana_h` (+ `_q1_h`, `_q3_h`) | horas | variante (a) |
+| `lead_time_commit_mediana_h` (+ `_q1_h`, `_q3_h`) | horas | variante (b) |
+| `coleta_incompleta` | booleano | algum intervalo do cache não terminou de ser coletado |
 
 ## Regra importante
 
