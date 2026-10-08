@@ -1,4 +1,5 @@
 import pytest
+import src.collectors.repositories as repositories
 
 from src.collectors.repositories import (
     GitHubClient,
@@ -137,7 +138,7 @@ def workflow_run_pages():
             {
                 "total_count": 8,
                 "workflow_runs": [
-                    run(1, "main", "push", "success"),
+                    {**run(1, "main", "push", "success"), "workflow_id": 42, "name": "CI"},
                     run(2, "main", "push", "failure"),
                     run(3, "feature", "push", "failure"),
                     run(4, "main", "pull_request", "failure"),
@@ -531,6 +532,8 @@ def test_collect_repository_workflow_runs_paginates_filters_and_classifies(
         "ignored",
         "ignored",
     ]
+    assert runs[0]["workflow_id"] == 42
+    assert runs[0]["name"] == "CI"
     assert runs[0]["head_sha"] == "sha-1"
     assert runs[0]["head_branch"] == "main"
     assert runs[0]["event"] == "push"
@@ -539,6 +542,80 @@ def test_collect_repository_workflow_runs_paginates_filters_and_classifies(
     assert runs[0]["created_at"] == "2025-01-01T10:00:00Z"
     assert runs[0]["updated_at"] == "2025-01-01T10:05:00Z"
     assert runs[0]["run_started_at"] == "2025-01-01T10:01:00Z"
+
+
+def test_collect_workflow_runs_splits_observation_window_into_months(monkeypatch):
+    requested_params = []
+
+    def run(run_id, created_at):
+        return {
+            "id": run_id,
+            "workflow_id": 42,
+            "name": "CI",
+            "head_sha": f"sha-{run_id}",
+            "head_branch": "main",
+            "event": "push",
+            "conclusion": "success",
+            "created_at": created_at,
+            "updated_at": created_at,
+            "run_started_at": created_at,
+        }
+
+    responses = iter(
+        [
+            FakeResponse({"workflow_runs": [run(1, "2026-01-20T10:00:00Z")]}),
+            FakeResponse({"workflow_runs": [run(2, "2026-02-20T10:00:00Z")]}),
+            FakeResponse({"workflow_runs": [run(3, "2026-03-02T10:00:00Z")]}),
+        ]
+    )
+
+    def fake_get(url, **kwargs):
+        requested_params.append(kwargs["params"])
+        return next(responses)
+
+    monkeypatch.setattr("src.collectors.repositories.requests.get", fake_get)
+    client = GitHubClient(token="test-token")
+
+    runs = collect_repository_workflow_runs(
+        client,
+        {
+            "full_name": "example/project",
+            "owner": "example",
+            "name": "project",
+            "default_branch": "main",
+        },
+        observation_start="2026-01-15T00:00:00Z",
+        observation_end="2026-03-02T23:59:59Z",
+    )
+
+    assert [params["created"] for params in requested_params] == [
+        "2026-01-15..2026-01-31",
+        "2026-02-01..2026-02-28",
+        "2026-03-01..2026-03-02",
+    ]
+    assert [run["id"] for run in runs] == [1, 2, 3]
+
+
+def test_github_client_retries_transient_5xx_with_exponential_backoff(monkeypatch):
+    responses = iter(
+        [
+            FakeResponse({}, status_code=500),
+            FakeResponse({}, status_code=502),
+            FakeResponse({"ok": True}, status_code=200),
+        ]
+    )
+    waits = []
+
+    monkeypatch.setattr(
+        "src.collectors.repositories.requests.get",
+        lambda *args, **kwargs: next(responses),
+    )
+    monkeypatch.setattr("src.collectors.repositories.time.sleep", waits.append)
+
+    response = GitHubClient(token="test-token").get("/rate_limit")
+
+    assert response.status_code == 200
+    assert waits == [1, 2]
 
 
 def test_repository_cache_can_be_written_and_read(monkeypatch, tmp_path):
@@ -620,12 +697,12 @@ def test_cached_collection_resumes_after_interrupted_page(
                 [{"id": 1}],
                 headers={"Link": f'<{next_page_url}>; rel="next"'},
             )
-        return FakeResponse([], status_code=500)
+        return FakeResponse([], status_code=400)
 
     monkeypatch.setattr("src.collectors.repositories.requests.get", fail_on_second_page)
     client = GitHubClient(token="test-token")
 
-    with pytest.raises(RuntimeError, match="500"):
+    with pytest.raises(RuntimeError, match="400"):
         collect_cached_paginated(
             client,
             "example/project",

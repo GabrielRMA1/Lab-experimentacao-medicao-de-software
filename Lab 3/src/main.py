@@ -19,6 +19,7 @@ from src.collectors.repositories import (  # noqa: E402
     filter_records_by_observation_window,
     search_repositories,
 )
+from src.metricas import calculate_cfr_ci, calculate_recovery_time  # noqa: E402
 
 
 DATA_DIR = ROOT / "data"
@@ -91,7 +92,12 @@ def main() -> None:
 
         try:
             repository_data["workflow_runs"] = filter_records_by_observation_window(
-                collect_repository_workflow_runs(client, repository_data),
+                collect_repository_workflow_runs(
+                    client,
+                    repository_data,
+                    observation_start=observation_start,
+                    observation_end=observation_end,
+                ),
                 ("created_at",),
                 observation_start,
                 observation_end,
@@ -169,8 +175,20 @@ def main() -> None:
                 }
             )
 
+    metrics = []
+    for repository_data in final_sample:
+        workflow_runs = repository_data.get("workflow_runs", [])
+        metrics.append(
+            {
+                "full_name": repository_data["full_name"],
+                "cfr_ci": calculate_cfr_ci(workflow_runs),
+                "recovery_time": calculate_recovery_time(workflow_runs),
+            }
+        )
+
     save_json(DATA_DIR / "repositories.json", final_sample)
     save_json(DATA_DIR / "funnel.json", funnel)
+    save_json(DATA_DIR / "cfr_recovery.json", metrics)
 
     print()
     print(

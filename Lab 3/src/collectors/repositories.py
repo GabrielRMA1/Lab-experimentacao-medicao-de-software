@@ -2,7 +2,7 @@ import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -21,6 +21,7 @@ CACHE_DIR = ROOT / "Lab 3" / "data" / "cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 MAX_WORKERS = 8
+MAX_TRANSIENT_RETRIES = 5
 
 
 def filter_records_by_observation_window(
@@ -96,6 +97,7 @@ class GitHubClient:
             else f"{self.base_url}{path}"
         )
 
+        transient_attempt = 0
         while True:
             response = requests.get(
                 url,
@@ -129,6 +131,20 @@ class GitHubClient:
 
                     time.sleep(wait_seconds)
                     continue
+
+            if 500 <= response.status_code <= 599:
+                if transient_attempt >= MAX_TRANSIENT_RETRIES:
+                    return response
+
+                wait_seconds = 2 ** transient_attempt
+                transient_attempt += 1
+                print(
+                    f"Erro temporário ({response.status_code}). "
+                    f"Tentando novamente em {wait_seconds}s "
+                    f"({transient_attempt}/{MAX_TRANSIENT_RETRIES})..."
+                )
+                time.sleep(wait_seconds)
+                continue
 
             return response
 
@@ -708,8 +724,16 @@ def classify_workflow_run(conclusion: str | None) -> str:
 def collect_repository_workflow_runs(
     client: GitHubClient,
     repository: dict[str, Any],
+    observation_start: str | None = None,
+    observation_end: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Coleta workflow runs de push na branch padrão do repositório."""
+    """Coleta workflow runs de push na branch padrão do repositório.
+
+    Quando a janela de observação é informada, a API é consultada em
+    intervalos mensais. Isso impede que o teto de 1.000 resultados por
+    consulta trunque repositórios muito ativos. Cada intervalo tem seu
+    próprio checkpoint de cache, portanto uma interrupção é retomável.
+    """
 
     owner = repository.get("owner") or repository["full_name"].split("/", 1)[0]
     name = repository.get("name") or repository["full_name"].split("/", 1)[1]
@@ -722,6 +746,8 @@ def collect_repository_workflow_runs(
 
     fields = (
         "id",
+        "workflow_id",
+        "name",
         "head_sha",
         "head_branch",
         "event",
@@ -747,19 +773,80 @@ def collect_repository_workflow_runs(
         )
         return record
 
-    return collect_cached_paginated(
-        client,
-        repository["full_name"],
-        f"/repos/{owner}/{name}/actions/runs",
-        cache_key="workflow_runs",
-        params={
-            "branch": default_branch,
-            "event": "push",
-            "per_page": 100,
-        },
-        items_key="workflow_runs",
-        transform=normalize_run,
-    )
+    if bool(observation_start) != bool(observation_end):
+        raise ValueError(
+            "Configure OBSERVATION_START e OBSERVATION_END juntos."
+        )
+
+    path = f"/repos/{owner}/{name}/actions/runs"
+    base_params = {
+        "branch": default_branch,
+        "event": "push",
+        "per_page": 100,
+    }
+
+    if observation_start is None:
+        return collect_cached_paginated(
+            client,
+            repository["full_name"],
+            path,
+            cache_key="workflow_runs",
+            params=base_params,
+            items_key="workflow_runs",
+            transform=normalize_run,
+        )
+
+    start = datetime.fromisoformat(observation_start.replace("Z", "+00:00"))
+    end = datetime.fromisoformat(observation_end.replace("Z", "+00:00"))
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+    if start >= end:
+        raise ValueError("OBSERVATION_START deve ser anterior a OBSERVATION_END")
+
+    workflow_runs: list[dict[str, Any]] = []
+    interval_start = start
+    while interval_start <= end:
+        if interval_start.month == 12:
+            next_month = interval_start.replace(
+                year=interval_start.year + 1,
+                month=1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+        else:
+            next_month = interval_start.replace(
+                month=interval_start.month + 1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+        interval_end = min(end, next_month - timedelta(microseconds=1))
+        created_range = (
+            f"{interval_start.date().isoformat()}.."
+            f"{interval_end.date().isoformat()}"
+        )
+        workflow_runs.extend(
+            collect_cached_paginated(
+                client,
+                repository["full_name"],
+                path,
+                cache_key="workflow_runs_monthly_v1",
+                cache_subkey=created_range,
+                params={**base_params, "created": created_range},
+                items_key="workflow_runs",
+                transform=normalize_run,
+            )
+        )
+        interval_start = next_month
+
+    return workflow_runs
 
 
 # ============================================================
