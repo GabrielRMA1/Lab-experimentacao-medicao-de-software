@@ -13,6 +13,11 @@ aplica a definição operacional do professor:
   commit. Valor do repositório = mediana de TODOS os commits de TODAS as
   releases.
 * A primeira release (sem release anterior) é ignorada.
+* S02: os commits de cada release vêm do endpoint ``compare/{anterior}...{R}``
+  (cache ``compare_v1``), e não de um filtro por data. Assim, um commit
+  escrito há meses e só incluído agora em R continua contando (é exatamente o
+  caso que faz a variante (a) "explodir"). Intervalos com ``compare`` 404/422
+  são contados em ``n_releases_compare_404`` e ignorados.
 
 Unidade de saída: **horas**.
 """
@@ -127,6 +132,28 @@ def compute_release_lead_time(
 
 
 
+def make_compare_key(
+    since: str | None,
+    until: str | None,
+    base_tag: str,
+    head_tag: str,
+) -> str:
+    """Chave do cache ``compare_v1``: ``<since>|<until>|<base>...<head>``."""
+    return f"{since}|{until}|{base_tag}...{head_tag}"
+
+
+def parse_compare_key(key: str) -> dict[str, str | None]:
+    """Inverso de ``make_compare_key``; aceita a chave legada ``since|until``."""
+    parts = key.split("|", 2)
+    since = parts[0] if parts else None
+    until = parts[1] if len(parts) > 1 else None
+    base = head = None
+    if len(parts) > 2 and "..." in parts[2]:
+        base, _, head = parts[2].partition("...")
+    return {"since": since, "until": until, "from_release": base,
+            "to_release": head}
+
+
 def compute_repository_lead_time(
     full_name: str,
     commits_between_releases: list[dict[str, Any]],
@@ -152,10 +179,13 @@ def compute_repository_lead_time(
     release_lead_times: list[float] = []
     all_commit_lead_times: list[float] = []
     seen_shas: set[str] = set()
-    n_sem_commits = n_fora_janela = n_sem_data = 0
+    n_sem_commits = n_fora_janela = n_sem_data = n_compare_404 = 0
     n_invalidos = n_duplicados = 0
 
     for interval in intervals:
+        if interval.get("not_found"):
+            n_compare_404 += 1
+            continue
         until = parse_iso(interval.get("until"))
         if until is not None and (
             (start and until < start) or (end and until > end)
@@ -188,6 +218,7 @@ def compute_repository_lead_time(
         "n_releases_sem_commits": n_sem_commits,
         "n_releases_sem_data": n_sem_data,
         "n_releases_fora_janela": n_fora_janela,
+        "n_releases_compare_404": n_compare_404,
         "n_commits": len(all_commit_lead_times),
         "n_commits_invalidos": n_invalidos,
         "n_commits_duplicados": n_duplicados,
@@ -204,20 +235,27 @@ def compute_repository_lead_time(
 def intervals_from_cache(cache_record: dict[str, Any]) -> list[dict[str, Any]]:
     """Converte ``_pipeline_cache`` no formato de ``commits_between_releases``.
 
-    Chave do cache: ``"<since>|<until>"``; ``until`` = published_at da release.
+    Fonte preferida (S02): ``compare_v1``, com chave
+    ``"<since>|<until>|<base>...<head>"``. Se o repositório só tiver o cache
+    legado da S01 (``commits_between_releases``, chave ``"<since>|<until>"``),
+    ele é usado como fallback. ``until`` = ``published_at`` da release.
     """
-    cached = (cache_record.get("_pipeline_cache") or {}).get(
-        "commits_between_releases"
-    ) or {}
+    pipeline_cache = cache_record.get("_pipeline_cache") or {}
+    cached = pipeline_cache.get("compare_v1")
+    if cached is None:
+        cached = pipeline_cache.get("commits_between_releases") or {}
     intervals = []
     for key, value in cached.items():
-        since, _, until = key.partition("|")
+        info = parse_compare_key(key)
         intervals.append(
             {
-                "since": since,
-                "until": until,
+                "since": info["since"],
+                "until": info["until"],
+                "from_release": info["from_release"],
+                "to_release": info["to_release"],
                 "commits": value.get("items") or [],
                 "complete": value.get("complete", True),
+                "not_found": bool(value.get("not_found", False)),
             }
         )
     return intervals
@@ -231,6 +269,8 @@ def compute_from_cache_dir(
     """Calcula o lead time de todos os repositórios do cache."""
     rows = []
     for path in sorted(Path(cache_dir).glob("*.json")):
+        if path.name.startswith("_"):
+            continue  # arquivos auxiliares (ex.: _candidates.json)
         record = json.loads(path.read_text(encoding="utf-8"))
         full_name = record.get("full_name") or path.stem.replace("__", "/", 1)
         intervals = intervals_from_cache(record)
