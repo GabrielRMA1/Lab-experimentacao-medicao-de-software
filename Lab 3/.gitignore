@@ -1,6 +1,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
 env/
@@ -8,8 +10,15 @@ env/
 # Secrets
 .env
 
-# Generated data/cache
+# Cache bruto da API (grande; é regenerável e retomável)
 data/cache/*
 !data/cache/.gitkeep
+
+# Saídas da S01 (substituídas pelo dataset da S02)
 data/repositories.json
 data/funnel.json
+data/cfr_recovery.json
+data/results/
+
+# NÃO ignorar (devem ser commitados): data/candidates.json, data/funil.*,
+# data/selecao_repositorios.csv, data/dataset/, data/validacao/rotulos_*.csv

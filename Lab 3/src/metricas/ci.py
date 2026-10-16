@@ -1,4 +1,4 @@
-"""Cálculo das métricas DORA da Parte C (CFR e tempo de recuperação).
+"""Métricas de CI: CFR (a) e tempo de recuperação (RQ 03a e RQ 04).
 
 As funções deste módulo trabalham somente com os dados já coletados pelo
 pipeline. Nenhuma chamada à API do GitHub é feita aqui.
@@ -7,7 +7,7 @@ pipeline. Nenhuma chamada à API do GitHub é feita aqui.
 from __future__ import annotations
 
 from datetime import datetime
-from statistics import median
+from statistics import median, quantiles
 from typing import Any
 
 
@@ -19,6 +19,12 @@ def _parse_datetime(value: str) -> datetime:
     if not value:
         raise ValueError("Data obrigatória não informada.")
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _started(run: dict[str, Any]) -> datetime:
+    """Início da run (``run_started_at``; cai para ``created_at`` se ausente)."""
+
+    return _parse_datetime(run.get("run_started_at") or run.get("created_at"))
 
 
 def calculate_cfr_ci(workflow_runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -87,12 +93,7 @@ def calculate_recovery_time(
     episodes: list[dict[str, Any]] = []
 
     for workflow, runs in grouped.items():
-        runs.sort(
-            key=lambda run: (
-                _parse_datetime(run["run_started_at"]),
-                run.get("id", 0),
-            )
-        )
+        runs.sort(key=lambda run: (_started(run), run.get("id", 0)))
 
         active_failure: dict[str, Any] | None = None
         has_success = False
@@ -102,7 +103,7 @@ def calculate_recovery_time(
             if classification == "success":
                 has_success = True
                 if active_failure is not None:
-                    start = _parse_datetime(active_failure["run_started_at"])
+                    start = _started(active_failure)
                     end = _parse_datetime(run["updated_at"])
                     hours = (end - start).total_seconds() / 3600
                     episodes.append(
@@ -148,4 +149,15 @@ def calculate_recovery_time(
         "censored_rate": censored / len(episodes) if episodes else None,
         "recovery_times_hours": recovered,
         "median_hours": median(recovered) if recovered else None,
+        "q1_hours": _quartiles(recovered)[0],
+        "q3_hours": _quartiles(recovered)[1],
     }
+
+
+def _quartiles(values: list[float]) -> tuple[float | None, float | None]:
+    """(Q1, Q3) pelo método inclusivo; ``(None, None)`` com menos de 2 valores."""
+
+    if len(values) < 2:
+        return None, None
+    q1, _, q3 = quantiles(values, n=4, method="inclusive")
+    return q1, q3
