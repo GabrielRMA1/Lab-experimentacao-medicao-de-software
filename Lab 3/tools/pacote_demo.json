@@ -1,0 +1,207 @@
+[
+ {
+  "full_name": "demo/exemplo-1",
+  "url": "https://example.com/demo/exemplo-1",
+  "language": "Go",
+  "stars": 100,
+  "releases": [
+   {
+    "tag_name": "v1.0.0",
+    "url": "https://example.com/demo/exemplo-1/releases/v1.0.0",
+    "name": "v1.0.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.1.0",
+    "url": "https://example.com/demo/exemplo-1/releases/v1.1.0",
+    "name": "v1.1.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.2.0",
+    "url": "https://example.com/demo/exemplo-1/releases/v1.2.0",
+    "name": "v1.2.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.3.0",
+    "url": "https://example.com/demo/exemplo-1/releases/v1.3.0",
+    "name": "v1.3.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.4.0",
+    "url": "https://example.com/demo/exemplo-1/releases/v1.4.0",
+    "name": "v1.4.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   }
+  ]
+ },
+ {
+  "full_name": "demo/exemplo-2",
+  "url": "https://example.com/demo/exemplo-2",
+  "language": "Go",
+  "stars": 101,
+  "releases": [
+   {
+    "tag_name": "v1.0.0",
+    "url": "https://example.com/demo/exemplo-2/releases/v1.0.0",
+    "name": "v1.0.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.1.0",
+    "url": "https://example.com/demo/exemplo-2/releases/v1.1.0",
+    "name": "v1.1.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.2.0",
+    "url": "https://example.com/demo/exemplo-2/releases/v1.2.0",
+    "name": "v1.2.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.3.0",
+    "url": "https://example.com/demo/exemplo-2/releases/v1.3.0",
+    "name": "v1.3.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.4.0",
+    "url": "https://example.com/demo/exemplo-2/releases/v1.4.0",
+    "name": "v1.4.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   }
+  ]
+ },
+ {
+  "full_name": "demo/exemplo-3",
+  "url": "https://example.com/demo/exemplo-3",
+  "language": "Go",
+  "stars": 102,
+  "releases": [
+   {
+    "tag_name": "v1.0.0",
+    "url": "https://example.com/demo/exemplo-3/releases/v1.0.0",
+    "name": "v1.0.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.1.0",
+    "url": "https://example.com/demo/exemplo-3/releases/v1.1.0",
+    "name": "v1.1.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.2.0",
+    "url": "https://example.com/demo/exemplo-3/releases/v1.2.0",
+    "name": "v1.2.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.3.0",
+    "url": "https://example.com/demo/exemplo-3/releases/v1.3.0",
+    "name": "v1.3.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   },
+   {
+    "tag_name": "v1.4.0",
+    "url": "https://example.com/demo/exemplo-3/releases/v1.4.0",
+    "name": "v1.4.0",
+    "published_at": "2026-03-10T00:00:00Z",
+    "notes": "DADOS FICTÍCIOS (demonstração do rotulador).",
+    "n_commits": 2,
+    "commit_messages": [
+     "fix: exemplo",
+     "feat: exemplo"
+    ]
+   }
+  ]
+ }
+ 
+]
