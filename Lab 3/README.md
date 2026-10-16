@@ -1,110 +1,111 @@
-# Lab 03 — Mineração de Métricas DORA
+# Lab 03 — Mineração de métricas DORA
 
-Base inicial da S01 do Laboratório de Experimentação de Software.
+Pipeline reprodutível que calcula as métricas DORA (deployment frequency, lead
+time, change failure rate e tempo de recuperação) para repositórios populares
+do GitHub que usam GitHub Actions. Estado atual: **Sprint 02** (amostra
+completa ≥ 300 repositórios, dataset, validação manual).
 
-## Requisitos
+> Tudo roda a partir da pasta `Lab 3`. O token **nunca** é commitado.
+
+## Requisitos e instalação
 
 - Python 3.11+
-- Token do GitHub com acesso à API REST.
+- Token do GitHub (REST). Cada integrante usa o **próprio** token (a cota é por token).
 
-## Configuração
-
-No PowerShell:
-
-```powershell
-$env:GITHUBTOKEN="SEU_TOKEN_AQUI"
-```
-
-Opcionalmente, altere a consulta de repositórios:
-
-```powershell
-$env:GITHUB_REPO_QUERY="stars:>1000"
-```
-
-O alvo da amostra final da S01 é 100. Ele pode ser ajustado separadamente da
-quantidade de candidatos buscados:
-
-```powershell
-$env:S01_SAMPLE_TARGET="100"
-```
-
-A janela de observação é configurada por `OBSERVATION_START` e
-`OBSERVATION_END` no arquivo `.env`. Os valores atualmente configurados são
-**PROVISÓRIOS** (12 meses anteriores ao lançamento do Lab 3) e devem ser
-substituídos quando o professor publicar as datas oficiais:
-
-```dotenv
-OBSERVATION_START=2025-10-02T00:00:00Z
-OBSERVATION_END=2026-10-02T23:59:59Z
-```
-
-Os valores são lidos do `.env`, não fixados no código. A janela inclusiva é
-aplicada a `published_at` das releases, `commit.author.date` dos commits e
-`created_at` dos workflow runs. Releases válidas continuam sendo apenas as
-que têm `draft=false` e `prerelease=false`; workflow runs válidos são da
-branch padrão e do evento `push`. A amostra final da S01 não representa a
-meta mínima de 300 repositórios da S02.
-
-## Instalação
-
-```powershell
+```bash
 pip install -r requirements.txt
 ```
 
-## Execução
+Crie um arquivo `.env` (já está no `.gitignore`) — ou exporte as variáveis:
 
-A partir da pasta `Lab 3`:
-
-```powershell
-python src/main.py
+```dotenv
+GITHUBTOKEN=ghp_xxx                       # ou GITHUB_TOKEN
+OBSERVATION_START=2025-10-02T00:00:00Z    # PROVISÓRIO: troque pelas datas oficiais
+OBSERVATION_END=2026-10-02T23:59:59Z
 ```
 
-A execução salva:
+**Os três integrantes precisam usar exatamente a mesma janela.** Outras
+variáveis (todas opcionais): `GITHUB_REPO_QUERY` (padrão `stars:>1000`),
+`CANDIDATES_TARGET` (1500), `SAMPLE_TARGET` (teto da amostra, 400),
+`MIN_SAMPLE` (300), `WORKERS` (4), `HEURISTICA_VERSAO`.
 
-- `data/repositories.json`: repositórios da amostra final da S01;
-- `data/funnel.json`: etapas do funil.
+## Como rodar (Sprint 02)
+
+```bash
+python -m src.pipeline search                  # 1) candidatos -> data/candidates.json (commitar)
+python -m src.pipeline collect --shard 1/3     # 2) coleta (cada integrante uma fatia: 1/3, 2/3, 3/3)
+python -m src.pipeline merge-cache PASTA...    # 3) junta os data/cache das outras máquinas
+python -m src.pipeline consolidate             # 4) funil + dataset + dicionário
+python -m src.pipeline amostra-ouro            # 5) sorteia 60 repos e gera o material de rotulagem
+#    ... cada integrante rotula sozinho (tools/rotulador.html) ...
+python -m src.pipeline concordancia            # 6) kappa de Fleiss + consenso (--parcial se incompleto)
+python -m src.pipeline heuristica              # 7) precisão/recall/F1 de cada versão da heurística
+python -m src.pipeline consolidate             # 8) refaz o dataset com a heurística escolhida
+```
+
+`python -m src.pipeline all` executa 1 → 2 → 4 em uma máquina só.
+
+**Cache e retomada.** Toda resposta da API é gravada por página em
+`data/cache/<dono>__<repo>.json`. Se a coleta cair (rate limit, rede,
+`Ctrl+C`), rode o mesmo comando de novo: ele continua de onde parou, sem
+repetir chamadas. O rate limit é lido de `X-RateLimit-*` (espera automática);
+limites secundários usam `Retry-After`; erros 5xx têm *backoff* exponencial.
+
+**Coleta em paralelo (3 tokens).** `--shard I/N` divide os candidatos
+(ordenados por estrelas) entre as máquinas; cada fatia para ao atingir sua cota
+de aceitos. Depois, `merge-cache` reúne as pastas `data/cache` (escolhe a
+melhor cópia de cada repositório).
+
+## Saídas
+
+| Arquivo | Conteúdo |
+|---|---|
+| `data/candidates.json` | candidatos da busca (compartilhado pelo grupo) |
+| `data/funil.md/.json`, `data/funil_tabela.tex` | funil de seleção (vai para a Metodologia) |
+| `data/selecao_repositorios.csv` | decisão por repositório (aceito/descartado + motivo) |
+| `data/dataset/dataset_repos.csv` | **dataset final** (1 linha por repositório) |
+| `data/dataset/dicionario_dados.csv`, `docs/DICIONARIO_DADOS.md` | dicionário de dados |
+| `data/validacao/` | amostra-ouro, rótulos de cada avaliador, consenso, kappa, F1 |
+
+## Definições operacionais adotadas
+
+Seguem a seção 3 do enunciado. Decisões do grupo onde o enunciado deixa margem:
+
+- **Deploy** = release com `draft=false` e `prerelease=false`, `published_at` na janela. Pré-releases são coletadas (campo `prerelease`) para a RQ 07.
+- **Commits de uma release** vêm de `compare/{release anterior}...{R}` — **não** de um filtro por data. Assim, um commit escrito antes da release anterior mas só incluído agora continua contando (é o que faz o lead time (a) "explodir"). Os commits **não** são filtrados pela janela; só as releases são. A release anterior à primeira da janela pode estar fora dela.
+- **Runs válidos** (critério ≥ 50): `push` no default branch, criados na janela, com `conclusion` em `success` ou `failure/timed_out/startup_failure`. `cancelled`, `skipped` etc. são ignorados em tudo.
+- **Recuperação**: por workflow; episódio = 1ª falha após sucesso → próximo sucesso (`updated_at − run_started_at`); sem sucesso depois = **censurado** (reportado, não descartado).
+- **CFR (b)**: R falha se houver release corretiva em (R, R+7 d]; releases dos últimos 7 dias da janela são censuradas. A heurística tem versões (`src/metricas/heuristica.py`) avaliadas contra o consenso humano.
+- **Compare 404/422** (tag apagada): release ignorada no lead time e contada em `lt_n_releases_compare_404`.
+- Lista de contribuidores via `?per_page=1&anon=true` (nº da última página do cabeçalho `Link`).
+
+## Testes e CI
+
+```bash
+pytest -q
+pytest --cov=src.metricas --cov-report=term-missing   # exigência: >= 80% (hoje ~95%)
+```
+
+O workflow está em `.github/workflows/lab3-tests.yml` (**na raiz do repositório**).
+Os testes usam um GitHub falso em memória (`tests/fake_github.py`); os
+exemplos numéricos do enunciado (lead time de 13 dias, CFR de `v2.3.0`,
+recuperação de 1h20, precisão 75%/recall 60%) são casos de teste.
 
 ## Estrutura
 
-- `src/collectors/repositories.py`: **coleta** (seleção, metadados, releases, commits, workflow runs).
-- `src/metricas/lead_time.py`: **cálculo** do Lead Time (RQ 02).
-- `src/main.py`: ponto de entrada do pipeline de coleta.
-- `tests/`: testes unitários.
-- `data/cache/`: espaço reservado para cache/retomada das próximas etapas.
-
-## Lead Time (RQ 02)
- 
-Regras (definição operacional do enunciado, seção 5/RQ 02):
- 
-- Entrega = `published_at` da release R. Início = `commit.author.date`.
-- **(a) por release:** data de R − commit mais antigo de R; valor do repositório = mediana entre as releases.
-- **(b) por commit:** data de R − data de cada commit; valor do repositório = mediana de todos os commits.
-- Unidade: **horas**. Também são salvos Q1 e Q3 (para o IQR).
-- A primeira release (sem release anterior) não gera intervalo e fica fora.
-- Release sem commits válidos: não entra na mediana e é contada em `n_releases_sem_commits`.
-- Commit sem data, ou com data posterior à release: ignorado e contado em `n_commits_invalidos`.
-- Mesmo `sha` em duas releases: contado só na primeira (`n_commits_duplicados`).
-Como rodar (a partir da pasta `Lab 3`, depois da coleta):
- 
-```powershell
-python -m src.metricas.lead_time          # gera data/results/lead_time.csv e .json
-pytest --cov=src.metricas --cov-report=term-missing
 ```
- 
-A execução salva `data/results/lead_time.csv` e `data/results/lead_time.json`.
- 
-### Dicionário de dados (`data/results/lead_time.csv`)
- 
-| Coluna | Unidade | Origem |
-|---|---|---|
-| `full_name` | texto | dono/repositório |
-| `n_releases_avaliadas` | contagem | releases com ao menos 1 commit válido |
-| `n_releases_sem_commits` / `n_releases_sem_data` / `n_releases_fora_janela` | contagem | releases descartadas do cálculo, por motivo |
-| `n_commits` / `n_commits_invalidos` / `n_commits_duplicados` | contagem | commits usados / ignorados |
-| `lead_time_release_mediana_h` (+ `_q1_h`, `_q3_h`) | horas | variante (a) |
-| `lead_time_commit_mediana_h` (+ `_q1_h`, `_q3_h`) | horas | variante (b) |
-| `coleta_incompleta` | booleano | algum intervalo do cache não terminou de ser coletado |
+src/collectors/   repositories.py (cliente, busca, cache, runs, releases) · commits_compare.py
+src/metricas/     ci.py (CFR a, recuperação) · lead_time.py · heuristica.py · cfr_release.py
+src/pipeline/     __main__.py (CLI) · selecao.py · funil.py · dataset.py · dicionario.py · merge.py · config.py
+src/validacao/    amostra_ouro.py · concordancia.py · avaliar_heuristica.py
+tools/            rotulador.html (rotulagem manual, funciona offline no navegador)
+docs/             plano da sprint, protocolo de validação, heurística, artigo (metodologia)
+tests/
+```
 
-## Regra importante
+## Regras do processo
 
-O token deve ficar somente na variável de ambiente `GITHUBTOKEN`. Não coloque o token em código, README ou commit.
+- Todo commit referencia a Issue (`#N`) — commits sem número não são considerados na correção.
+- Cada integrante é *Assignee* de ao menos uma Issue com código commitado na sprint.
+- Respeitar o WIP no GitHub Projects e manter os cartões atualizados.
+- O token fica só no `.env`/variável de ambiente.

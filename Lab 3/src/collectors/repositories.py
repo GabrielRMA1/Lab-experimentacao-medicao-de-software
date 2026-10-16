@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
@@ -69,12 +70,16 @@ def filter_records_by_observation_window(
 
 class GitHubClient:
     def __init__(self, token: str | None = None):
-        self.token = token or os.getenv("GITHUBTOKEN")
+        self.token = (
+            token
+            or os.getenv("GITHUBTOKEN")
+            or os.getenv("GITHUB_TOKEN")
+        )
 
         if not self.token:
             raise RuntimeError(
                 "Token do GitHub não encontrado. "
-                "Verifique GITHUBTOKEN no arquivo .env."
+                "Defina GITHUBTOKEN (ou GITHUB_TOKEN) no ambiente ou no .env."
             )
 
         self.base_url = "https://api.github.com"
@@ -110,6 +115,26 @@ class GitHubClient:
                 remaining = response.headers.get(
                     "X-RateLimit-Remaining"
                 )
+
+                # Limite secundário (abuso/concorrência): o GitHub informa
+                # quanto esperar em Retry-After, sem zerar a cota primária.
+                retry_after = response.headers.get("Retry-After")
+                if retry_after and retry_after.strip().isdigit():
+                    wait_seconds = int(retry_after) + 1
+                    print(
+                        f"Limite secundário. Aguardando {wait_seconds}s..."
+                    )
+                    time.sleep(wait_seconds)
+                    continue
+                if (
+                    response.status_code == 403
+                    and remaining != "0"
+                    and "secondary rate limit"
+                    in (getattr(response, "text", "") or "").lower()
+                ):
+                    print("Limite secundário. Aguardando 60s...")
+                    time.sleep(60)
+                    continue
 
                 if remaining == "0" or response.status_code == 429:
                     reset = response.headers.get(
@@ -274,32 +299,48 @@ def search_repositories(
 # Contributors
 # ============================================================
 
+def _last_page_from_link(link_header: str) -> int | None:
+    """Extrai o número da última página do cabeçalho ``Link`` (rel="last")."""
+
+    for link in link_header.split(","):
+        if 'rel="last"' in link:
+            match = re.search(r"[?&]page=(\d+)", link)
+            if match:
+                return int(match.group(1))
+    return None
+
+
 def get_contributor_count(
     client: GitHubClient,
     owner: str,
     repo: str,
 ) -> int | None:
 
-    try:
-        contributors = client.get_paginated(
-            f"/repos/{owner}/{repo}/contributors",
-            params={
-                "anon": "true",
-                "per_page": 100,
-            },
-        )
+    # Dica do enunciado: com per_page=1, o número da última página (cabeçalho
+    # Link) é o total de contribuidores. Uma chamada, em vez de dezenas.
+    response = client.get(
+        f"/repos/{owner}/{repo}/contributors",
+        params={"anon": "true", "per_page": 1},
+    )
+    if response.status_code == 200:
+        last_page = _last_page_from_link(response.headers.get("Link", ""))
+        if last_page is not None:
+            return last_page
+        data = response.json()
+        return len(data) if isinstance(data, list) else None
 
-        return len(contributors)
-
-    except RuntimeError as error:
-        error_text = str(error).lower()
-
-        if "contributor list is too large" not in error_text:
-            raise
-
+    error_text = (getattr(response, "text", "") or "").lower()
+    if response.status_code == 204:
+        return 0
+    if "contributor list is too large" in error_text:
         print(
             f"  {owner}/{repo}: lista de contribuidores "
             f"muito grande. Usando stats/contributors..."
+        )
+    else:
+        raise RuntimeError(
+            f"Erro ao obter contribuidores de {owner}/{repo} "
+            f"({response.status_code}): {response.text}"
         )
 
     path = f"/repos/{owner}/{repo}/stats/contributors"
@@ -1077,3 +1118,171 @@ def build_initial_funnel(
         "final_sample": final_stage,
         "stages": stages,
     }
+
+
+# ============================================================
+# S02 — busca fatiada, pré-filtro de Actions e releases completas
+# ============================================================
+
+SEARCH_RESULT_CAP = 1000  # teto da Search API por consulta
+
+
+def search_repositories_sliced(
+    client: GitHubClient,
+    base_query: str = "stars:>1000",
+    target: int = 1500,
+    min_stars: int = 1000,
+) -> list[dict[str, Any]]:
+    """Busca mais de 1.000 candidatos fatiando a consulta por faixa de estrelas.
+
+    A Search API devolve no máximo 1.000 resultados por consulta. Aqui cada
+    fatia ``stars:{min}..{teto}`` é ordenada por estrelas (decrescente); ao
+    saturar o teto, a próxima fatia começa no menor número de estrelas já
+    visto (inclusive, com deduplicação por ``full_name``).
+
+    ``base_query`` pode conter outros qualificadores (ex.: ``language:python``)
+    desde que NÃO contenha ``stars:`` — essa parte é gerenciada aqui.
+    """
+
+    extra = re.sub(r"stars:\S+", "", base_query).strip()
+    seen: dict[str, dict[str, Any]] = {}
+    upper: int | None = None
+
+    while len(seen) < target:
+        stars_clause = (
+            f"stars:{min_stars}..{upper}" if upper is not None
+            else f"stars:>={min_stars}"
+        )
+        query = f"{extra} {stars_clause}".strip()
+        slice_items: list[dict[str, Any]] = []
+        page = 1
+        while len(slice_items) < SEARCH_RESULT_CAP:
+            response = client.get(
+                "/search/repositories",
+                params={
+                    "q": query,
+                    "sort": "stars",
+                    "order": "desc",
+                    "per_page": 100,
+                    "page": page,
+                },
+            )
+            if response.status_code >= 400:
+                raise RuntimeError(
+                    f"Erro ao buscar repositórios "
+                    f"({response.status_code}): {response.text}"
+                )
+            items = response.json().get("items", [])
+            if not items:
+                break
+            slice_items.extend(items)
+            if len(items) < 100:
+                break
+            page += 1
+
+        new_in_slice = 0
+        for item in slice_items:
+            name = item.get("full_name")
+            if name and name not in seen:
+                seen[name] = item
+                new_in_slice += 1
+
+        if len(slice_items) < SEARCH_RESULT_CAP or new_in_slice == 0:
+            break  # fatia não saturou: não há mais resultados abaixo
+        lowest = min(item.get("stargazers_count", 0) for item in slice_items)
+        if upper is not None and lowest >= upper:
+            break  # sem progresso (muitos repositórios com as mesmas estrelas)
+        upper = lowest
+
+    ordered = sorted(
+        seen.values(),
+        key=lambda item: item.get("stargazers_count", 0),
+        reverse=True,
+    )
+    return ordered[:target]
+
+
+def get_workflow_count(
+    client: GitHubClient,
+    owner: str,
+    repo: str,
+) -> int:
+    """``total_count`` de workflows (0 = repositório não usa Actions)."""
+
+    response = client.get(
+        f"/repos/{owner}/{repo}/actions/workflows",
+        params={"per_page": 1},
+    )
+    if response.status_code == 404:
+        return 0
+    if response.status_code >= 400:
+        raise RuntimeError(
+            f"Erro ao consultar workflows de {owner}/{repo} "
+            f"({response.status_code}): {response.text}"
+        )
+    return int(response.json().get("total_count", 0))
+
+
+def get_pipeline_value(full_name: str, key: str, default: Any = None) -> Any:
+    """Lê um valor simples guardado em ``_pipeline_cache`` do repositório."""
+
+    cached = load_cached_repository(full_name) or {}
+    return (cached.get("_pipeline_cache") or {}).get(key, default)
+
+
+def set_pipeline_value(full_name: str, key: str, value: Any) -> None:
+    """Grava (de forma atômica) um valor simples em ``_pipeline_cache``."""
+
+    cached = load_cached_repository(full_name) or {"full_name": full_name}
+    pipeline_cache = cached.get("_pipeline_cache")
+    if not isinstance(pipeline_cache, dict):
+        pipeline_cache = {}
+    pipeline_cache[key] = value
+    cached["_pipeline_cache"] = pipeline_cache
+    save_cached_repository(cached)
+
+
+def collect_repository_releases_full(
+    client: GitHubClient,
+    repository: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Todas as releases não-draft, com ``prerelease`` e ``body``.
+
+    Diferente de ``collect_repository_releases`` (S01), mantém pré-releases
+    (marcadas em ``prerelease``) e as notas da release (``body``, truncado).
+    Isso permite: (i) achar a release anterior à primeira da janela, (ii) a
+    heurística de release corretiva e a rotulagem manual e (iii) a variante
+    "release + pré-release" da RQ 07. O histórico completo é coletado: o
+    filtro de janela é feito depois, no cálculo.
+    """
+
+    owner = repository.get("owner") or repository["full_name"].split("/", 1)[0]
+    name = repository.get("name") or repository["full_name"].split("/", 1)[1]
+
+    def normalize_release(
+        release: dict[str, Any],
+    ) -> dict[str, Any] | None:
+        if release.get("draft") is not False:
+            return None
+        body = release.get("body") or ""
+        return {
+            "id": release.get("id"),
+            "tag_name": release.get("tag_name"),
+            "name": release.get("name"),
+            "created_at": release.get("created_at"),
+            "published_at": release.get("published_at"),
+            "html_url": release.get("html_url"),
+            "target_commitish": release.get("target_commitish"),
+            "prerelease": bool(release.get("prerelease", False)),
+            "draft": False,
+            "body": body[:2000],
+        }
+
+    return collect_cached_paginated(
+        client,
+        repository["full_name"],
+        f"/repos/{owner}/{name}/releases",
+        cache_key="releases_v2",
+        params={"per_page": 100},
+        transform=normalize_release,
+    )
