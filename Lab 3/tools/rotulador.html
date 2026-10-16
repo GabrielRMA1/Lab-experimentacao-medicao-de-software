@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotulador da amostra-ouro</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --ink: #1b1f24; --muted: #5b6573; --line: #d9dee5;
+    --accent: #1f6feb; --ok: #1a7f37; --warn: #b35900; --chip: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1318; --card: #171c23; --ink: #e6e9ee; --muted: #9aa5b3; --line: #2b323c;
+      --accent: #58a6ff; --ok: #3fb950; --warn: #e3a008; --chip: #222a34;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--card);
+           position: sticky; top: 0; z-index: 5; }
+  header .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 16px; margin: 0; flex: 1 1 auto; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  label { font-weight: 600; display: block; margin: 8px 0 4px; }
+  select, input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+                              background: var(--bg); color: var(--ink); min-width: 220px; }
+  button { font: inherit; padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--card);
+           color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.pick.on-sim { background: var(--warn); color: #fff; border-color: var(--warn); }
+  button.pick.on-nao { background: var(--ok); color: #fff; border-color: var(--ok); }
+  button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .bar { height: 6px; background: var(--chip); border-radius: 3px; overflow: hidden; flex: 1 1 160px; min-width: 120px; }
+  .bar > div { height: 100%; background: var(--ok); width: 0; transition: width .15s; }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--chip); padding: 8px 10px; border-radius: 6px;
+        max-height: 220px; overflow: auto; margin: 6px 0; font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  ul.commits { margin: 6px 0; padding-left: 18px; font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; max-height: 200px; overflow: auto; }
+  .rel-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .tag { font-weight: 700; }
+  .chip { background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: var(--muted); }
+  .nav { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .hint { font-size: 13px; color: var(--muted); }
+  #start { text-align: center; padding: 28px 16px; }
+  .hidden { display: none; }
+  @media (max-width: 560px) { select, input[type=text] { min-width: 0; width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <h1>Rotulador da amostra-ouro</h1>
+    <span id="who" class="chip hidden"></span>
+    <div class="bar" aria-label="progresso"><div id="barfill"></div></div>
+    <span id="progress" class="hint"></span>
+    <button id="export" class="primary hidden">Exportar CSVs</button>
+  </div>
+</header>
+<main>
+  <section id="start" class="card">
+    <p><strong>Rotule sozinho, sem consultar os colegas e sem ver a saída da heurística.</strong></p>
+    <label for="rater">Seu nome (será o nome dos arquivos: <code>rotulos_&lt;nome&gt;_*.csv</code>)</label>
+    <input id="rater" type="text" placeholder="leo | gabriel | pedro" autocomplete="off">
+    <label for="file">Pacote de rotulagem (<code>pacote_rotulagem.json</code>)</label>
+    <input id="file" type="file" accept="application/json,.json">
+    <p class="hint">Seu progresso fica salvo neste navegador. Reabrir o arquivo e carregar o mesmo pacote retoma de onde parou.</p>
+    <p id="err" class="hint" style="color: var(--warn)"></p>
+  </section>
+
+  <section id="work" class="hidden">
+    <div class="card">
+      <div class="nav">
+        <button id="prev">← Anterior</button>
+        <button id="next">Próximo →</button>
+        <select id="jump" aria-label="Ir para repositório"></select>
+        <span id="pos" class="hint"></span>
+      </div>
+    </div>
+    <div class="card" id="repo"></div>
+    <div id="releases"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var TIPOS = [
+    ["biblioteca_framework", "Biblioteca / framework"],
+    ["aplicacao_servico", "Aplicação / serviço"],
+    ["ferramenta_cli", "Ferramenta CLI"],
+    ["outro", "Outro"]
+  ];
+  var ENTREGAS = [
+    ["sim", "Sim — releases são entregas reais ao usuário"],
+    ["nao", "Não"],
+    ["incerto", "Incerto"]
+  ];
+  var pkg = [], labels = { repos: {}, releases: {} }, idx = 0, rater = "", storeKey = "";
+
+  function $(id) { return document.getElementById(id); }
+  function safeGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function safeSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* sem armazenamento */ } }
+  function persist() { safeSet(storeKey, JSON.stringify(labels)); }
+  function relKey(repo, tag) { return repo + "\u0001" + tag; }
+
+  function el(tag, attrs, children) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "class") n.className = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+
+  function counts() {
+    var total = 0, done = 0;
+    pkg.forEach(function (r) {
+      total += 2; // tipo + entregas
+      var l = labels.repos[r.full_name] || {};
+      if (l.tipo_projeto) done++;
+      if (l.entregas_reais) done++;
+      r.releases.forEach(function (rel) {
+        total++;
+        if (labels.releases[relKey(r.full_name, rel.tag_name)]) done++;
+      });
+    });
+    return { total: total, done: done };
+  }
+
+  function updateProgress() {
+    var c = counts();
+    $("progress").textContent = c.done + " / " + c.total + " rótulos";
+    $("barfill").style.width = (c.total ? (100 * c.done / c.total) : 0) + "%";
+    var j = $("jump");
+    for (var i = 0; i < pkg.length; i++) {
+      var r = pkg[i], l = labels.repos[r.full_name] || {}, full = l.tipo_projeto && l.entregas_reais;
+      r.releases.forEach(function (rel) { if (!labels.releases[relKey(r.full_name, rel.tag_name)]) full = false; });
+      j.options[i].textContent = (full ? "✓ " : "· ") + (i + 1) + ". " + r.full_name;
+    }
+  }
+
+  function select(name, options, current, onchange) {
+    var s = el("select", { id: name, "aria-label": name });
+    s.appendChild(el("option", { value: "", text: "— escolha —" }));
+    options.forEach(function (o) {
+      var op = el("option", { value: o[0], text: o[1] });
+      if (o[0] === current) op.selected = true;
+      s.appendChild(op);
+    });
+    s.addEventListener("change", function () { onchange(s.value); });
+    return s;
+  }
+
+  function render() {
+    var r = pkg[idx];
+    var l = labels.repos[r.full_name] || {};
+    $("pos").textContent = "Repositório " + (idx + 1) + " de " + pkg.length;
+    $("jump").value = String(idx);
+
+    var repo = $("repo");
+    repo.textContent = "";
+    var head = el("div", { class: "rel-head" }, [
+      el("h2", { text: r.full_name, style: "margin:0;font-size:18px" }),
+      el("span", { class: "chip", text: (r.language || "linguagem n/d") + " · ★ " + (r.stars == null ? "n/d" : r.stars) })
+    ]);
+    repo.appendChild(head);
+    var link = el("a", { href: r.url, target: "_blank", rel: "noopener noreferrer", text: r.url });
+    repo.appendChild(el("p", { class: "hint" }, [link]));
+    repo.appendChild(el("label", { for: "tipo", text: "(i) Tipo do projeto" }));
+    repo.appendChild(select("tipo", TIPOS, l.tipo_projeto, function (v) {
+      labels.repos[r.full_name] = Object.assign({}, labels.repos[r.full_name], { tipo_projeto: v });
+      persist(); updateProgress();
+    }));
+    repo.appendChild(el("label", { for: "entregas", text: "(ii) As releases deste repositório representam entregas reais ao usuário?" }));
+    repo.appendChild(select("entregas", ENTREGAS, l.entregas_reais, function (v) {
+      labels.repos[r.full_name] = Object.assign({}, labels.repos[r.full_name], { entregas_reais: v });
+      persist(); updateProgress();
+    }));
+
+    var box = $("releases");
+    box.textContent = "";
+    if (!r.releases.length) {
+      box.appendChild(el("div", { class: "card muted", text: "Este repositório não tem releases elegíveis no pacote." }));
+    }
+    r.releases.forEach(function (rel) {
+      var key = relKey(r.full_name, rel.tag_name), cur = labels.releases[key] || "";
+      var card = el("div", { class: "card" });
+      var title = el("div", { class: "rel-head" }, [
+        el("span", {}, [
+          el("span", { class: "tag", text: rel.tag_name }),
+          el("span", { class: "muted", text: rel.name && rel.name !== rel.tag_name ? "  —  " + rel.name : "" })
+        ]),
+        el("span", { class: "chip", text: (rel.published_at || "").slice(0, 10) + " · " + rel.n_commits + " commits" })
+      ]);
+      card.appendChild(title);
+      if (rel.url) card.appendChild(el("p", { class: "hint" }, [el("a", { href: rel.url, target: "_blank", rel: "noopener noreferrer", text: "abrir release no GitHub" })]));
+      card.appendChild(el("div", { class: "muted", text: "Notas da release" }));
+      card.appendChild(el("pre", { text: rel.notes && rel.notes.trim() ? rel.notes : "(sem notas)" }));
+      card.appendChild(el("div", { class: "muted", text: "Commits incluídos (1ª linha" + (rel.n_commits > rel.commit_messages.length ? "; mostrando " + rel.commit_messages.length + " de " + rel.n_commits : "") + ")" }));
+      var ul = el("ul", { class: "commits" });
+      rel.commit_messages.forEach(function (m) { ul.appendChild(el("li", { text: m || "(sem mensagem)" })); });
+      card.appendChild(ul);
+      card.appendChild(el("div", { class: "muted", text: "(iii) Esta release é corretiva (objetivo principal: corrigir um defeito recente)?" }));
+      var row = el("div", { class: "nav", style: "margin-top:6px" });
+      ["sim", "nao"].forEach(function (v) {
+        var b = el("button", { class: "pick" + (cur === v ? " on-" + v : ""), type: "button", text: v === "sim" ? "Sim, é corretiva" : "Não" });
+        b.addEventListener("click", function () {
+          labels.releases[key] = v; persist(); updateProgress(); render();
+        });
+        row.appendChild(b);
+      });
+      card.appendChild(row);
+      box.appendChild(card);
+    });
+    updateProgress();
+  }
+
+  function go(n) { idx = Math.max(0, Math.min(pkg.length - 1, n)); render(); window.scrollTo(0, 0); }
+
+  function csvCell(v) {
+    v = v == null ? "" : String(v);
+    return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function toCsv(header, rows) {
+    return [header].concat(rows).map(function (r) { return r.map(csvCell).join(","); }).join("\n") + "\n";
+  }
+  function download(name, text) {
+    var blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  window.__buildCsvs = function () {
+    var repoRows = pkg.map(function (r) {
+      var l = labels.repos[r.full_name] || {};
+      return [r.full_name, r.url, l.tipo_projeto || "", l.entregas_reais || ""];
+    });
+    var relRows = [];
+    pkg.forEach(function (r) {
+      r.releases.forEach(function (rel) {
+        relRows.push([r.full_name, rel.tag_name, rel.url, labels.releases[relKey(r.full_name, rel.tag_name)] || ""]);
+      });
+    });
+    return {
+      repos: toCsv(["full_name", "url", "tipo_projeto", "entregas_reais"], repoRows),
+      releases: toCsv(["full_name", "tag_name", "release_url", "corretiva"], relRows)
+    };
+  };
+
+  $("export").addEventListener("click", function () {
+    var c = counts();
+    if (c.done < c.total && !window.confirm("Faltam " + (c.total - c.done) + " rótulos. Exportar mesmo assim? (células vazias serão rejeitadas pelo script de concordância)")) return;
+    var out = window.__buildCsvs();
+    download("rotulos_" + rater + "_repos.csv", out.repos);
+    download("rotulos_" + rater + "_releases.csv", out.releases);
+  });
+
+  $("file").addEventListener("change", function (ev) {
+    var f = ev.target.files[0];
+    $("err").textContent = "";
+    rater = $("rater").value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "");
+    if (!rater) { $("err").textContent = "Informe seu nome antes de carregar o pacote."; ev.target.value = ""; return; }
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        pkg = JSON.parse(reader.result);
+        if (!Array.isArray(pkg) || !pkg.length || !pkg[0].full_name) throw new Error("formato inesperado");
+      } catch (e) { $("err").textContent = "Pacote inválido: " + e.message; return; }
+      storeKey = "rotulador:" + rater + ":" + pkg.length + ":" + pkg[0].full_name;
+      try { labels = JSON.parse(safeGet(storeKey)) || labels; } catch (e) { /* começa vazio */ }
+      labels.repos = labels.repos || {}; labels.releases = labels.releases || {};
+      var jump = $("jump"); jump.textContent = "";
+      pkg.forEach(function (r, i) { jump.appendChild(el("option", { value: String(i), text: (i + 1) + ". " + r.full_name })); });
+      $("who").textContent = "avaliador: " + rater; $("who").classList.remove("hidden");
+      $("export").classList.remove("hidden");
+      $("start").classList.add("hidden"); $("work").classList.remove("hidden");
+      idx = 0; render();
+    };
+    reader.readAsText(f);
+  });
+
+  $("prev").addEventListener("click", function () { go(idx - 1); });
+  $("next").addEventListener("click", function () { go(idx + 1); });
+  $("jump").addEventListener("change", function (e) { go(parseInt(e.target.value, 10)); });
+})();
+</script>
+</body>
+</html>
