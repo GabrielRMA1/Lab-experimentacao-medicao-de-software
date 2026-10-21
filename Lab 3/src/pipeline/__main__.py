@@ -63,7 +63,9 @@ def cmd_consolidate(cfg: Config, args) -> None:
     from src.pipeline.selecao import load_candidates, read_decisions
 
     candidates = load_candidates(cfg.candidates_path)
-    decisions = read_decisions(candidates, load_cached_repository)
+    decisions = read_decisions(
+        candidates, lambda n: load_cached_repository(n, include_segments=False)
+    )
     funnel = build_funnel(candidates, decisions, cfg)
     write_funnel(funnel, candidates, decisions, cfg.data_dir)
     print(open(cfg.data_dir / "funil.md", encoding="utf-8").read())

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -417,48 +418,152 @@ def cache_path(full_name: str) -> Path:
     return CACHE_DIR / f"{safe_name}.json"
 
 
-def load_cached_repository(
-    full_name: str,
+# Grupos grandes do cache (milhares de runs, commits de cada ``compare``)
+# ficam em arquivos separados, um por intervalo, em
+# ``data/cache/<dono>__<repo>.parts/<grupo>/<hash>.json``. Assim cada página
+# coletada regrava só o seu intervalo, e não o repositório inteiro (com um
+# arquivo único, repositórios muito ativos chegavam a centenas de MB e cada
+# página levava dezenas de segundos para ser gravada).
+SEGMENTED_KEYS = ("workflow_runs_monthly_v1", "compare_v1")
+
+
+def parts_dir(full_name: str) -> Path:
+    return CACHE_DIR / f"{full_name.replace('/', '__')}.parts"
+
+
+def segment_path(full_name: str, cache_key: str, subkey: str) -> Path:
+    digest = hashlib.sha1(subkey.encode("utf-8")).hexdigest()[:20]
+    return parts_dir(full_name) / cache_key / f"{digest}.json"
+
+
+def _write_json_atomic(path: Path, data: Any, indent: int | None = None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = path.with_suffix(".tmp")
+    with temporary_path.open("w", encoding="utf-8") as file:
+        if indent is None:
+            json.dump(data, file, ensure_ascii=False, separators=(",", ":"))
+        else:
+            json.dump(data, file, ensure_ascii=False, indent=indent)
+    temporary_path.replace(path)
+
+
+def load_segment(
+    full_name: str, cache_key: str, subkey: str
 ) -> dict[str, Any] | None:
+    """Estado de um intervalo (``items``, ``next_url``, ``complete``...)."""
 
-    path = cache_path(full_name)
-
+    _migrate_inline_segments(full_name)
+    path = segment_path(full_name, cache_key, subkey)
     if not path.exists():
         return None
-
     try:
-        with path.open(
-            "r",
-            encoding="utf-8",
-        ) as file:
-            data = json.load(file)
-
-        return data
-
+        data = json.loads(path.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return None
+    data.pop("subkey", None)
+    return data
+
+
+def save_segment(
+    full_name: str, cache_key: str, subkey: str, state: dict[str, Any]
+) -> None:
+    _write_json_atomic(
+        segment_path(full_name, cache_key, subkey), {"subkey": subkey, **state}
+    )
+
+
+def _load_main(full_name: str) -> dict[str, Any] | None:
+    path = cache_path(full_name)
+    if not path.exists():
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            return json.load(file)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def _migrate_inline_segments(full_name: str) -> None:
+    """Move grupos grandes gravados no arquivo principal (formato antigo).
+
+    Roda uma vez por repositório: caches criados antes desta versão têm runs
+    e ``compare`` dentro do JSON principal. Eles são copiados para os
+    arquivos de intervalo e removidos do principal.
+    """
+
+    path = cache_path(full_name)
+    if not path.exists():
+        return
+    # Leitura barata: só abre o arquivo inteiro se ele citar um grupo grande.
+    with path.open("r", encoding="utf-8") as file:
+        head = file.read(1 << 20)
+    if not any(f'"{key}"' in head for key in SEGMENTED_KEYS) and path.stat().st_size <= (1 << 20):
+        return
+    data = _load_main(full_name)
+    if not data:
+        return
+    pipeline = data.get("_pipeline_cache") or {}
+    moved = False
+    for key in SEGMENTED_KEYS:
+        group = pipeline.pop(key, None)
+        if isinstance(group, dict):
+            for subkey, state in group.items():
+                if isinstance(state, dict) and not segment_path(full_name, key, subkey).exists():
+                    save_segment(full_name, key, subkey, state)
+            moved = True
+    if moved:
+        _write_json_atomic(path, data, indent=2)
+
+
+def load_cached_repository(
+    full_name: str,
+    include_segments: bool = True,
+) -> dict[str, Any] | None:
+    """Registro do repositório. Com ``include_segments`` (padrão), remonta
+    os grupos grandes em ``_pipeline_cache[grupo][intervalo]``, no mesmo
+    formato de antes — quem só lê o cache não precisa saber da divisão."""
+
+    _migrate_inline_segments(full_name)
+    data = _load_main(full_name)
+    base = parts_dir(full_name)
+    if data is None and include_segments and base.is_dir():
+        data = {"full_name": full_name}
+    if data is None or not include_segments:
+        return data
+    for key in SEGMENTED_KEYS:
+        directory = base / key
+        if not directory.is_dir():
+            continue
+        group: dict[str, Any] = {}
+        for segment in sorted(directory.glob("*.json")):
+            try:
+                state = json.loads(segment.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+            subkey = state.pop("subkey", None)
+            if subkey is not None:
+                group[subkey] = state
+        if group:
+            data.setdefault("_pipeline_cache", {})[key] = group
+    return data
 
 
 def save_cached_repository(
     data: dict[str, Any],
 ) -> None:
+    """Grava o registro; grupos grandes vão para os arquivos de intervalo."""
 
-    path = cache_path(data["full_name"])
-
-    temporary_path = path.with_suffix(".tmp")
-
-    with temporary_path.open(
-        "w",
-        encoding="utf-8",
-    ) as file:
-        json.dump(
-            data,
-            file,
-            ensure_ascii=False,
-            indent=2,
-        )
-
-    temporary_path.replace(path)
+    full_name = data["full_name"]
+    pipeline = data.get("_pipeline_cache")
+    main = data
+    if isinstance(pipeline, dict) and any(k in pipeline for k in SEGMENTED_KEYS):
+        main = {**data, "_pipeline_cache": {
+            k: v for k, v in pipeline.items() if k not in SEGMENTED_KEYS}}
+        for key in SEGMENTED_KEYS:
+            for subkey, state in (pipeline.get(key) or {}).items():
+                if isinstance(state, dict):
+                    save_segment(full_name, key, subkey, state)
+    _write_json_atomic(cache_path(full_name), main, indent=2)
 
 
 def collect_cached_paginated(
@@ -473,7 +578,15 @@ def collect_cached_paginated(
 ) -> list[dict[str, Any]]:
     """Collect pages with atomic per-repository checkpoints and resume."""
 
-    cached_repository = load_cached_repository(full_name) or {
+    if cache_subkey is not None and cache_key in SEGMENTED_KEYS:
+        return _collect_segment_paginated(
+            client, full_name, path, cache_key, cache_subkey,
+            params, items_key, transform,
+        )
+
+    cached_repository = load_cached_repository(
+        full_name, include_segments=False
+    ) or {
         "full_name": full_name,
     }
     pipeline_cache = cached_repository.get("_pipeline_cache", {})
@@ -553,6 +666,47 @@ def collect_cached_paginated(
     return items
 
 
+def _collect_segment_paginated(
+    client: GitHubClient,
+    full_name: str,
+    path: str,
+    cache_key: str,
+    cache_subkey: str,
+    params: dict[str, Any],
+    items_key: str | None,
+    transform: Callable[[dict[str, Any]], dict[str, Any] | None] | None,
+) -> list[dict[str, Any]]:
+    """Mesma lógica de ``collect_cached_paginated``, gravando só o intervalo."""
+
+    state = load_segment(full_name, cache_key, cache_subkey) or {}
+    if state.get("complete") is True and isinstance(state.get("items"), list):
+        return state["items"]
+    items = list(state.get("items") or [])
+    raw_count = [int(state.get("raw_count", len(items)))]
+
+    def save_page(page_items: list[dict[str, Any]], next_url: str | None) -> None:
+        raw_count[0] += len(page_items)
+        for item in page_items:
+            normalized = transform(item) if transform else item
+            if normalized is not None:
+                items.append(normalized)
+        save_segment(full_name, cache_key, cache_subkey, {
+            "items": items,
+            "next_url": next_url,
+            "complete": next_url is None,
+            "raw_count": raw_count[0],
+        })
+
+    client.get_paginated(
+        path,
+        params=params,
+        items_key=items_key,
+        start_url=state.get("next_url"),
+        on_page=save_page,
+    )
+    return items
+
+
 # ============================================================
 # Metadata de um repositório
 # ============================================================
@@ -568,7 +722,7 @@ def collect_repository_metadata(
     # Verifica cache
     # --------------------------------------------------------
 
-    cached = load_cached_repository(full_name)
+    cached = load_cached_repository(full_name, include_segments=False)
 
     if cached is not None:
         return {
@@ -939,11 +1093,7 @@ def _collect_runs_interval(
         items_key="workflow_runs",
         transform=transform,
     )
-    state = (
-        ((load_cached_repository(full_name) or {}).get("_pipeline_cache") or {})
-        .get(RUNS_CACHE_KEY, {})
-        .get(created_range, {})
-    )
+    state = load_segment(full_name, RUNS_CACHE_KEY, created_range) or {}
     if state.get("raw_count", 0) < RUNS_QUERY_CAP:
         return items
 
@@ -959,6 +1109,10 @@ def _collect_runs_interval(
         )
         return items
 
+    print(
+        f"  ... {full_name}: >= {RUNS_QUERY_CAP} runs em {created_range}; "
+        "subdividindo o intervalo"
+    )
     middle = interval_start + (interval_end - interval_start) / 2
     middle = middle.replace(microsecond=0)
     halves = (
@@ -1312,14 +1466,16 @@ def get_workflow_count(
 def get_pipeline_value(full_name: str, key: str, default: Any = None) -> Any:
     """Lê um valor simples guardado em ``_pipeline_cache`` do repositório."""
 
-    cached = load_cached_repository(full_name) or {}
+    cached = load_cached_repository(full_name, include_segments=False) or {}
     return (cached.get("_pipeline_cache") or {}).get(key, default)
 
 
 def set_pipeline_value(full_name: str, key: str, value: Any) -> None:
     """Grava (de forma atômica) um valor simples em ``_pipeline_cache``."""
 
-    cached = load_cached_repository(full_name) or {"full_name": full_name}
+    cached = load_cached_repository(full_name, include_segments=False) or {
+        "full_name": full_name
+    }
     pipeline_cache = cached.get("_pipeline_cache")
     if not isinstance(pipeline_cache, dict):
         pipeline_cache = {}

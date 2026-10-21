@@ -271,8 +271,11 @@ def compute_from_cache_dir(
     for path in sorted(Path(cache_dir).glob("*.json")):
         if path.name.startswith("_"):
             continue  # arquivos auxiliares (ex.: _candidates.json)
+        from src.collectors.repositories import load_cached_repository
+
         record = json.loads(path.read_text(encoding="utf-8"))
         full_name = record.get("full_name") or path.stem.replace("__", "/", 1)
+        record = load_cached_repository(full_name) or record
         intervals = intervals_from_cache(record)
         row = compute_repository_lead_time(
             full_name, intervals, observation_start, observation_end
