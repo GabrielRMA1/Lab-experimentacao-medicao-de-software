@@ -16,6 +16,8 @@ COMMANDS = {
     "amostra-ouro": "sorteia 60 repositórios e gera o material de rotulagem",
     "concordancia": "kappa de Fleiss + consenso dos 3 avaliadores",
     "heuristica": "precisão/recall/F1 de cada versão da heurística corretiva",
+    "analise": "RQ 01–08 a partir do CSV -> data/resultados (tabelas .tex, figuras, resumo.md)",
+    "relatorio": "relatório .docx no modelo da disciplina -> data/resultados/Relatorio_Lab03.docx",
     "all": "search + collect + consolidate",
 }
 
@@ -113,6 +115,25 @@ def cmd_heuristica(cfg: Config, args) -> None:
     run(cfg.validacao_dir)
 
 
+def cmd_analise(cfg: Config, args) -> None:
+    from src.analise import executar_tudo
+
+    dataset = Path(args.dataset) if args.dataset else cfg.dataset_dir / "dataset_repos.csv"
+    resumo = executar_tudo(dataset, cfg.data_dir / "resultados", cfg.validacao_dir)
+    print(resumo.read_text(encoding="utf-8"))
+    print(f"Tabelas e figuras em {resumo.parent}")
+
+
+def cmd_relatorio(cfg: Config, args) -> None:
+    from src.analise.relatorio import gerar
+
+    dataset = Path(args.dataset) if args.dataset else None
+    destino = gerar(cfg.data_dir / "resultados", cfg.data_dir, cfg.validacao_dir,
+                    cfg.data_dir / "resultados" / "Relatorio_Lab03.docx", dataset=dataset)
+    print(f"Relatório gerado: {destino}")
+    print("Procure os trechos [PREENCHER: ...] destacados em amarelo e revise o texto.")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.pipeline")
     parser.add_argument("command", choices=list(COMMANDS), help="; ".join(
@@ -122,6 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--parcial", action="store_true",
                         help="concordancia: usa só itens que os 3 já rotularam")
     parser.add_argument("--force", action="store_true", help="refaz a busca (search)")
+    parser.add_argument("--dataset", help="analise: caminho de outro CSV")
     args = parser.parse_args(argv)
     cfg = Config.from_env()
 
@@ -129,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         "search": cmd_search, "collect": cmd_collect, "merge-cache": cmd_merge_cache,
         "consolidate": cmd_consolidate, "amostra-ouro": cmd_amostra_ouro,
         "concordancia": cmd_concordancia, "heuristica": cmd_heuristica,
+        "analise": cmd_analise, "relatorio": cmd_relatorio,
     }
     if args.command == "all":
         for step in (cmd_search, cmd_collect, cmd_consolidate):
