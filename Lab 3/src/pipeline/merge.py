@@ -15,15 +15,29 @@ from pathlib import Path
 from typing import Any
 
 
+def _parts(path: Path) -> Path:
+    """Pasta com os intervalos grandes (runs, compare) do repositório."""
+
+    return path.with_name(path.stem + ".parts")
+
+
+def _size(path: Path) -> int:
+    size = path.stat().st_size
+    parts = _parts(path)
+    if parts.is_dir():
+        size += sum(f.stat().st_size for f in parts.rglob("*.json"))
+    return size
+
+
 def _rank(path: Path) -> tuple[int, int, int]:
-    """Melhor cópia: tem decisão > mais etapas em cache > maior arquivo."""
+    """Melhor cópia: tem decisão > mais etapas em cache > mais dados."""
 
     try:
         record: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return (-1, 0, 0)
     pipeline = record.get("_pipeline_cache") or {}
-    return ("decision" in pipeline, len(pipeline), path.stat().st_size)  # type: ignore[return-value]
+    return ("decision" in pipeline, len(pipeline), _size(path))  # type: ignore[return-value]
 
 
 def merge_caches(sources: list[Path], destination: Path) -> dict[str, int]:
@@ -46,5 +60,9 @@ def merge_caches(sources: list[Path], destination: Path) -> dict[str, int]:
                 stats["kept"] += 1
                 continue
             shutil.copyfile(path, target)
+            if _parts(target).exists():
+                shutil.rmtree(_parts(target))
+            if _parts(path).is_dir():
+                shutil.copytree(_parts(path), _parts(target))
             stats["copied"] += 1
     return stats

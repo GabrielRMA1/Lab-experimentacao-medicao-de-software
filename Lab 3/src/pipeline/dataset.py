@@ -132,6 +132,9 @@ def build_row(
         "rec_q1_h": recovery["q1_hours"],
         "rec_q3_h": recovery["q3_hours"],
         "coleta_incompleta": any(not i["complete"] for i in intervals),
+        "runs_intervalos_truncados": len(
+            (record.get("_pipeline_cache") or {}).get("runs_truncados_v1") or []
+        ),
     }
     assert list(row) == COLUMN_NAMES, "colunas do CSV divergem do dicionário"
     return row

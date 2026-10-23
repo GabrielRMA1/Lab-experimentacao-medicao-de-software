@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import math
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -157,6 +157,7 @@ def evaluate_candidate(
             "discarded", cfg, "releases", POUCAS_RELEASES,
             n_releases=len(in_window)))
 
+    print(f"  ... {full_name}: {len(in_window)} releases na janela; coletando workflow runs")
     runs = collect_repository_workflow_runs(
         client, metadata,
         observation_start=cfg.observation_start,
@@ -168,6 +169,7 @@ def evaluate_candidate(
             "discarded", cfg, "runs", POUCOS_RUNS,
             n_releases=len(in_window), n_runs=len(valid_runs)))
 
+    print(f"  ... {full_name}: {len(valid_runs)} runs válidos; coletando commits de cada release")
     summary = collect_window_commits(
         client, metadata, releases, cfg.observation_start, cfg.observation_end
     )
@@ -223,40 +225,57 @@ def collect(
     """Avalia os candidatos do fatiamento até atingir a cota de aceitos.
 
     A cota do fatiamento é ``ceil(sample_target / total)``; o que já está em
-    cache conta (e custa zero chamadas). Pode ser interrompida com Ctrl+C e
+    cache conta (e custa zero chamadas). Há sempre ``workers`` repositórios
+    em avaliação: quando um termina, o próximo começa — um repositório
+    gigante não segura os demais. Pode ser interrompida com Ctrl+C e
     retomada rodando o mesmo comando.
     """
 
     mine = assigned_candidates(candidates, shard)
     goal = math.ceil(cfg.sample_target / shard[1])
     stats = {"accepted": 0, "discarded": 0, "error": 0, "evaluated": 0}
-    chunk_size = max(cfg.workers * 2, 1)
+    workers = max(cfg.workers, 1)
+    queue = iter(mine)
+    running: dict[Future, dict[str, Any]] = {}
 
-    executor = ThreadPoolExecutor(max_workers=cfg.workers)
+    def submit_next() -> None:
+        candidate = next(queue, None)
+        if candidate is not None:
+            running[executor.submit(evaluate, client, candidate, cfg)] = candidate
+
+    executor = ThreadPoolExecutor(max_workers=workers)
     try:
-        for offset in range(0, len(mine), chunk_size):
-            chunk = mine[offset:offset + chunk_size]
-            futures = [(c, executor.submit(evaluate, client, c, cfg)) for c in chunk]
-            for candidate, future in futures:
+        for _ in range(workers):
+            submit_next()
+        while running:
+            done, _ = wait(list(running), return_when=FIRST_COMPLETED)
+            for future in done:
+                candidate = running.pop(future)
                 try:
                     decision = future.result()
                 except Exception as error:  # noqa: BLE001
                     stats["error"] += 1
                     log(f"[ERRO] {candidate['full_name']}: {type(error).__name__}: {error}")
-                    continue
-                stats["evaluated"] += 1
-                stats[decision["status"]] = stats.get(decision["status"], 0) + 1
-                if decision["status"] == "error":
-                    log(f"[ERRO] {candidate['full_name']}: {decision['reason']}")
                 else:
-                    log(
-                        f"[{stats['accepted']}/{goal} aceitos] "
-                        f"{candidate['full_name']}: {decision['status']}"
-                        + (f" ({decision['reason']})" if decision["reason"] else "")
-                    )
-            if stats["accepted"] >= goal:
-                log(f"Cota do fatiamento atingida ({goal} aceitos).")
-                break
+                    stats["evaluated"] += 1
+                    stats[decision["status"]] = stats.get(decision["status"], 0) + 1
+                    if decision["status"] == "error":
+                        log(f"[ERRO] {candidate['full_name']}: {decision['reason']}")
+                    else:
+                        log(
+                            f"[{stats['accepted']}/{goal} aceitos] "
+                            f"{candidate['full_name']}: {decision['status']}"
+                            + (f" ({decision['reason']})" if decision["reason"] else "")
+                        )
+                if stats["accepted"] < goal:
+                    submit_next()
+            if stats["accepted"] >= goal and running:
+                log(f"Cota do fatiamento atingida ({goal} aceitos); "
+                    f"terminando os {len(running)} em andamento...")
+                # Os que já começaram terminam (o trabalho fica em cache);
+                # nenhum novo é iniciado.
+        if stats["accepted"] >= goal:
+            log(f"Cota do fatiamento atingida ({goal} aceitos).")
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
     return stats

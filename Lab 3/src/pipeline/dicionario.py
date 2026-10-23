@@ -50,6 +50,7 @@ COLUMNS: list[tuple[str, str, str, str, str]] = [
     ("rec_q1_h", "decimal", "horas", "1º quartil do tempo de recuperação", "RQ 04"),
     ("rec_q3_h", "decimal", "horas", "3º quartil do tempo de recuperação", "RQ 04"),
     ("coleta_incompleta", "booleano", "—", "`True` se algum intervalo de `compare` do cache não terminou de ser coletado", "—"),
+    ("runs_intervalos_truncados", "inteiro", "intervalos", "Intervalos de `created` com >= 1.000 runs mesmo após subdivisão até 1 h (teto da API); 0 = coleta de runs completa", "RQ 03a/04"),
 ]
 
 COLUMN_NAMES = [name for name, *_ in COLUMNS]
