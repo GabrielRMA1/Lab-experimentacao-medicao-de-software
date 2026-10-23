@@ -12,8 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]  # pasta "Lab 3"
 load_dotenv(ROOT.parent / ".env")
 load_dotenv(ROOT / ".env")
 
-# Janela PROVISÓRIA (12 meses antes do lançamento do Lab 3). Substitua pelas
-# datas oficiais do professor via OBSERVATION_START / OBSERVATION_END.
+# Janela de observação oficial do grupo: 12 meses (02/10/2025 a 02/10/2026),
+# aprovada pelo professor. Pode ser sobrescrita por OBSERVATION_START /
+# OBSERVATION_END, mas os três integrantes DEVEM usar exatamente a mesma.
 DEFAULT_OBSERVATION_START = "2025-10-02T00:00:00Z"
 DEFAULT_OBSERVATION_END = "2026-10-02T23:59:59Z"
 
@@ -21,7 +22,7 @@ DEFAULT_OBSERVATION_END = "2026-10-02T23:59:59Z"
 @dataclass
 class Config:
     query: str = "stars:>1000"
-    candidates_target: int = 1500
+    candidates_target: int = 3000  # sobra de candidatos: a coleta para ao atingir a cota
     sample_target: int = 400  # teto da amostra final (mínimo exigido: 300)
     min_sample: int = 300
     min_releases: int = 5

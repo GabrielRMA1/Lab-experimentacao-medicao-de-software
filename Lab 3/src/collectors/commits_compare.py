@@ -23,8 +23,8 @@ from urllib.parse import quote
 from src.collectors.repositories import (
     GitHubClient,
     collect_cached_paginated,
-    load_cached_repository,
-    save_cached_repository,
+    load_segment,
+    save_segment,
 )
 from src.metricas.lead_time import make_compare_key, parse_iso
 
@@ -95,8 +95,7 @@ def collect_release_commits(
         f"{quote(base, safe='/')}...{quote(head, safe='/')}"
     )
 
-    cached = load_cached_repository(full_name) or {}
-    state = ((cached.get("_pipeline_cache") or {}).get(CACHE_KEY) or {}).get(key) or {}
+    state = load_segment(full_name, CACHE_KEY, key) or {}
     if state.get("not_found"):
         return {"items": [], "not_found": True}  # 404 já registrado: sem nova chamada
 
@@ -114,17 +113,12 @@ def collect_release_commits(
     except RuntimeError as error:
         if not any(code in str(error) for code in _NOT_FOUND_CODES):
             raise
-        cached = load_cached_repository(full_name) or {"full_name": full_name}
-        group = cached.setdefault("_pipeline_cache", {}).setdefault(
-            CACHE_KEY, {}
-        )
-        group[key] = {
+        save_segment(full_name, CACHE_KEY, key, {
             "items": [],
             "next_url": None,
             "complete": True,
             "not_found": True,
-        }
-        save_cached_repository(cached)
+        })
         return {"items": [], "not_found": True}
 
     return {"items": items, "not_found": False}

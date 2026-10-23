@@ -716,6 +716,7 @@ def test_cached_collection_resumes_after_interrupted_page(
         "items": [{"id": 1}],
         "next_url": next_page_url,
         "complete": False,
+        "raw_count": 1,
     }
 
     resumed_urls = []
