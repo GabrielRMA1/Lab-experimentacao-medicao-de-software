@@ -14,3 +14,4 @@
 
 ## Expectativa antes de simular
 Esperamos que o Mann-Whitney se saia melhor, porque os tempos de merge costumam apresentar valores extremos (outliers). Esse teste trabalha com as posições dos valores, enquanto o t de Welch compara as médias.
+ 
