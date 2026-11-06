@@ -57,3 +57,7 @@ O sorteio evita escolher PRs olhando seus tempos e permite repetir a mesma amost
 - **Períodos diferentes:** os grupos são de períodos diferentes. A diferença de tempo pode ter outras causas além do bot, como mudanças na equipe ou no projeto.
 - **Limite do download:** o comando baixa no máximo 300 PRs por período, não necessariamente todos os PRs integrados.
 - **Estudo observacional:** os dados vêm do histórico do projeto, sem sorteio de quais PRs receberiam o bot. Por isso, o estudo não prova que o bot causou uma diferença.
+
+## Como rodar
+pip install -r requirements.txt
+streamlit run app.py
