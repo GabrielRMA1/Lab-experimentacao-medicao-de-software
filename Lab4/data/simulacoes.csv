@@ -1,0 +1,161 @@
+situacao,nome_situacao,n,reducao_mediana,teste,alfa,taxa_rejeicao,erro_padrao
+A,Normal: log do tempo (pressupostos OK),30,0.0,t de Welch,0.05,0.047,0.002116388433156825
+A,Normal: log do tempo (pressupostos OK),30,0.0,t de Welch,0.01,0.01,0.00099498743710662
+A,Normal: log do tempo (pressupostos OK),30,0.0,Mann-Whitney,0.05,0.0458,0.00209051094232965
+A,Normal: log do tempo (pressupostos OK),30,0.0,Mann-Whitney,0.01,0.0086,0.0009233655830709741
+A,Normal: log do tempo (pressupostos OK),30,0.1,t de Welch,0.05,0.05,0.0021794494717703367
+A,Normal: log do tempo (pressupostos OK),30,0.1,t de Welch,0.01,0.0102,0.0010047865444958945
+A,Normal: log do tempo (pressupostos OK),30,0.1,Mann-Whitney,0.05,0.0488,0.002154496692965668
+A,Normal: log do tempo (pressupostos OK),30,0.1,Mann-Whitney,0.01,0.0096,0.0009750815350523257
+A,Normal: log do tempo (pressupostos OK),30,0.2,t de Welch,0.05,0.0713,0.002573252999609638
+A,Normal: log do tempo (pressupostos OK),30,0.2,t de Welch,0.01,0.0157,0.0012431214743539747
+A,Normal: log do tempo (pressupostos OK),30,0.2,Mann-Whitney,0.05,0.0664,0.0024897999919672262
+A,Normal: log do tempo (pressupostos OK),30,0.2,Mann-Whitney,0.01,0.0141,0.0011790330784163775
+A,Normal: log do tempo (pressupostos OK),30,0.3,t de Welch,0.05,0.0906,0.0028703943979878446
+A,Normal: log do tempo (pressupostos OK),30,0.3,t de Welch,0.01,0.0226,0.0014862449327079303
+A,Normal: log do tempo (pressupostos OK),30,0.3,Mann-Whitney,0.05,0.0875,0.0028256636388643286
+A,Normal: log do tempo (pressupostos OK),30,0.3,Mann-Whitney,0.01,0.0208,0.0014271425997425763
+A,Normal: log do tempo (pressupostos OK),30,0.4,t de Welch,0.05,0.1394,0.003463634507277002
+A,Normal: log do tempo (pressupostos OK),30,0.4,t de Welch,0.01,0.0447,0.0020664440471495956
+A,Normal: log do tempo (pressupostos OK),30,0.4,Mann-Whitney,0.05,0.1285,0.003346457081750788
+A,Normal: log do tempo (pressupostos OK),30,0.4,Mann-Whitney,0.01,0.0403,0.0019666191802176648
+A,Normal: log do tempo (pressupostos OK),30,0.5,t de Welch,0.05,0.2071,0.004052278248096989
+A,Normal: log do tempo (pressupostos OK),30,0.5,t de Welch,0.01,0.0734,0.002607919477284527
+A,Normal: log do tempo (pressupostos OK),30,0.5,Mann-Whitney,0.05,0.1936,0.003951190200433282
+A,Normal: log do tempo (pressupostos OK),30,0.5,Mann-Whitney,0.01,0.0666,0.002493279767695555
+A,Normal: log do tempo (pressupostos OK),30,0.6,t de Welch,0.05,0.3318,0.004708595969076132
+A,Normal: log do tempo (pressupostos OK),30,0.6,t de Welch,0.01,0.1416,0.0034863941257408065
+A,Normal: log do tempo (pressupostos OK),30,0.6,Mann-Whitney,0.05,0.3148,0.00464436174301701
+A,Normal: log do tempo (pressupostos OK),30,0.6,Mann-Whitney,0.01,0.1254,0.003311719190994309
+A,Normal: log do tempo (pressupostos OK),30,0.7,t de Welch,0.05,0.5176,0.004996901439892526
+A,Normal: log do tempo (pressupostos OK),30,0.7,t de Welch,0.01,0.2762,0.004471169421974524
+A,Normal: log do tempo (pressupostos OK),30,0.7,Mann-Whitney,0.05,0.4884,0.00499865421888732
+A,Normal: log do tempo (pressupostos OK),30,0.7,Mann-Whitney,0.01,0.249,0.004324338099640221
+A,Normal: log do tempo (pressupostos OK),30,0.8,t de Welch,0.05,0.7651,0.0042393630417788
+A,Normal: log do tempo (pressupostos OK),30,0.8,t de Welch,0.01,0.5288,0.004991698708856535
+A,Normal: log do tempo (pressupostos OK),30,0.8,Mann-Whitney,0.05,0.7336,0.00442075830599231
+A,Normal: log do tempo (pressupostos OK),30,0.8,Mann-Whitney,0.01,0.4954,0.004999788395522354
+A,Normal: log do tempo (pressupostos OK),30,0.9,t de Welch,0.05,0.9704,0.0016948109039063904
+A,Normal: log do tempo (pressupostos OK),30,0.9,t de Welch,0.01,0.889,0.003141321378019129
+A,Normal: log do tempo (pressupostos OK),30,0.9,Mann-Whitney,0.05,0.9619,0.0019143769221341973
+A,Normal: log do tempo (pressupostos OK),30,0.9,Mann-Whitney,0.01,0.8646,0.003421503178429036
+B,Lognormal: tempo em horas (assimétrico),30,0.0,t de Welch,0.05,0.0162,0.0012624404936471263
+B,Lognormal: tempo em horas (assimétrico),30,0.0,t de Welch,0.01,0.0002,0.00014140721339450828
+B,Lognormal: tempo em horas (assimétrico),30,0.0,Mann-Whitney,0.05,0.0457,0.0020883368981081574
+B,Lognormal: tempo em horas (assimétrico),30,0.0,Mann-Whitney,0.01,0.0086,0.0009233655830709741
+B,Lognormal: tempo em horas (assimétrico),30,0.1,t de Welch,0.05,0.018,0.0013295111883696203
+B,Lognormal: tempo em horas (assimétrico),30,0.1,t de Welch,0.01,0.0006,0.0002448754785600224
+B,Lognormal: tempo em horas (assimétrico),30,0.1,Mann-Whitney,0.05,0.0535,0.0022502833154960733
+B,Lognormal: tempo em horas (assimétrico),30,0.1,Mann-Whitney,0.01,0.0103,0.0010096489488926337
+B,Lognormal: tempo em horas (assimétrico),30,0.2,t de Welch,0.05,0.0197,0.0013896729831150924
+B,Lognormal: tempo em horas (assimétrico),30,0.2,t de Welch,0.01,0.001,0.0003160696125855822
+B,Lognormal: tempo em horas (assimétrico),30,0.2,Mann-Whitney,0.05,0.0641,0.002449309902809361
+B,Lognormal: tempo em horas (assimétrico),30,0.2,Mann-Whitney,0.01,0.0146,0.0011994515413304534
+B,Lognormal: tempo em horas (assimétrico),30,0.3,t de Welch,0.05,0.0234,0.0015117023516552457
+B,Lognormal: tempo em horas (assimétrico),30,0.3,t de Welch,0.01,0.0013,0.00036032069049667407
+B,Lognormal: tempo em horas (assimétrico),30,0.3,Mann-Whitney,0.05,0.0799,0.0027113832263256335
+B,Lognormal: tempo em horas (assimétrico),30,0.3,Mann-Whitney,0.01,0.0187,0.0013546331606748745
+B,Lognormal: tempo em horas (assimétrico),30,0.4,t de Welch,0.05,0.0327,0.001778502459936449
+B,Lognormal: tempo em horas (assimétrico),30,0.4,t de Welch,0.01,0.0012,0.00034620225302559775
+B,Lognormal: tempo em horas (assimétrico),30,0.4,Mann-Whitney,0.05,0.1296,0.003358628291430893
+B,Lognormal: tempo em horas (assimétrico),30,0.4,Mann-Whitney,0.01,0.0395,0.0019478128760227456
+B,Lognormal: tempo em horas (assimétrico),30,0.5,t de Welch,0.05,0.0512,0.002204054445788488
+B,Lognormal: tempo em horas (assimétrico),30,0.5,t de Welch,0.01,0.0031,0.0005559127629403736
+B,Lognormal: tempo em horas (assimétrico),30,0.5,Mann-Whitney,0.05,0.2027,0.004020108331873657
+B,Lognormal: tempo em horas (assimétrico),30,0.5,Mann-Whitney,0.01,0.0712,0.002571586280878011
+B,Lognormal: tempo em horas (assimétrico),30,0.6,t de Welch,0.05,0.0748,0.0026306835613581505
+B,Lognormal: tempo em horas (assimétrico),30,0.6,t de Welch,0.01,0.0053,0.0007260791967822794
+B,Lognormal: tempo em horas (assimétrico),30,0.6,Mann-Whitney,0.05,0.3192,0.004661666654749136
+B,Lognormal: tempo em horas (assimétrico),30,0.6,Mann-Whitney,0.01,0.1343,0.0034097435387430534
+B,Lognormal: tempo em horas (assimétrico),30,0.7,t de Welch,0.05,0.1206,0.003256618491625938
+B,Lognormal: tempo em horas (assimétrico),30,0.7,t de Welch,0.01,0.0133,0.0011455614344067278
+B,Lognormal: tempo em horas (assimétrico),30,0.7,Mann-Whitney,0.05,0.4972,0.004999921599385334
+B,Lognormal: tempo em horas (assimétrico),30,0.7,Mann-Whitney,0.01,0.2604,0.004388528682827538
+B,Lognormal: tempo em horas (assimétrico),30,0.8,t de Welch,0.05,0.1903,0.003925377816210817
+B,Lognormal: tempo em horas (assimétrico),30,0.8,t de Welch,0.01,0.0288,0.0016724401334576972
+B,Lognormal: tempo em horas (assimétrico),30,0.8,Mann-Whitney,0.05,0.7358,0.004409062938992819
+B,Lognormal: tempo em horas (assimétrico),30,0.8,Mann-Whitney,0.01,0.4901,0.004999019803921565
+B,Lognormal: tempo em horas (assimétrico),30,0.9,t de Welch,0.05,0.339,0.004733698342733724
+B,Lognormal: tempo em horas (assimétrico),30,0.9,t de Welch,0.01,0.0774,0.0026722507367386017
+B,Lognormal: tempo em horas (assimétrico),30,0.9,Mann-Whitney,0.05,0.9585,0.0019944360105052248
+B,Lognormal: tempo em horas (assimétrico),30,0.9,Mann-Whitney,0.01,0.8614,0.0034552863846575724
+C,Lognormal: amostra pequena,10,0.0,t de Welch,0.05,0.0064,0.0007974358908401352
+C,Lognormal: amostra pequena,10,0.0,t de Welch,0.01,0.0002,0.00014140721339450828
+C,Lognormal: amostra pequena,10,0.0,Mann-Whitney,0.05,0.0431,0.0020308222472683324
+C,Lognormal: amostra pequena,10,0.0,Mann-Whitney,0.01,0.0072,0.0008454679177828097
+C,Lognormal: amostra pequena,10,0.1,t de Welch,0.05,0.0084,0.0009126576576131929
+C,Lognormal: amostra pequena,10,0.1,t de Welch,0.01,0.0003,0.00017317909804592468
+C,Lognormal: amostra pequena,10,0.1,Mann-Whitney,0.05,0.0421,0.002008173050312149
+C,Lognormal: amostra pequena,10,0.1,Mann-Whitney,0.01,0.0064,0.0007974358908401352
+C,Lognormal: amostra pequena,10,0.2,t de Welch,0.05,0.0079,0.0008853016435091489
+C,Lognormal: amostra pequena,10,0.2,t de Welch,0.01,0.0002,0.00014140721339450828
+C,Lognormal: amostra pequena,10,0.2,Mann-Whitney,0.05,0.0486,0.002150303234429972
+C,Lognormal: amostra pequena,10,0.2,Mann-Whitney,0.01,0.008,0.0008908422980528036
+C,Lognormal: amostra pequena,10,0.3,t de Welch,0.05,0.0097,0.0009800974441350207
+C,Lognormal: amostra pequena,10,0.3,t de Welch,0.01,0.0004,0.0001999599959991998
+C,Lognormal: amostra pequena,10,0.3,Mann-Whitney,0.05,0.0564,0.0023069252263565026
+C,Lognormal: amostra pequena,10,0.3,Mann-Whitney,0.01,0.0101,0.0009998994949493674
+C,Lognormal: amostra pequena,10,0.4,t de Welch,0.05,0.0119,0.0010843611022164157
+C,Lognormal: amostra pequena,10,0.4,t de Welch,0.01,0.0003,0.00017317909804592468
+C,Lognormal: amostra pequena,10,0.4,Mann-Whitney,0.05,0.0661,0.0024845681717352817
+C,Lognormal: amostra pequena,10,0.4,Mann-Whitney,0.01,0.0119,0.0010843611022164157
+C,Lognormal: amostra pequena,10,0.5,t de Welch,0.05,0.0145,0.001195397423453807
+C,Lognormal: amostra pequena,10,0.5,t de Welch,0.01,0.0005,0.0002235508890610816
+C,Lognormal: amostra pequena,10,0.5,Mann-Whitney,0.05,0.0845,0.002781362076393507
+C,Lognormal: amostra pequena,10,0.5,Mann-Whitney,0.01,0.0187,0.0013546331606748745
+C,Lognormal: amostra pequena,10,0.6,t de Welch,0.05,0.0192,0.0013722740251130602
+C,Lognormal: amostra pequena,10,0.6,t de Welch,0.01,0.0009,0.0002998649696113236
+C,Lognormal: amostra pequena,10,0.6,Mann-Whitney,0.05,0.1145,0.0031841757175130898
+C,Lognormal: amostra pequena,10,0.6,Mann-Whitney,0.01,0.0301,0.0017086248856902442
+C,Lognormal: amostra pequena,10,0.7,t de Welch,0.05,0.0272,0.0016266579234737709
+C,Lognormal: amostra pequena,10,0.7,t de Welch,0.01,0.001,0.0003160696125855822
+C,Lognormal: amostra pequena,10,0.7,Mann-Whitney,0.05,0.1735,0.0037867895373257807
+C,Lognormal: amostra pequena,10,0.7,Mann-Whitney,0.01,0.0506,0.002191794698414977
+C,Lognormal: amostra pequena,10,0.8,t de Welch,0.05,0.044,0.002050950998927083
+C,Lognormal: amostra pequena,10,0.8,t de Welch,0.01,0.0023,0.0004790313142165134
+C,Lognormal: amostra pequena,10,0.8,Mann-Whitney,0.05,0.287,0.004523615810388853
+C,Lognormal: amostra pequena,10,0.8,Mann-Whitney,0.01,0.0957,0.0029417938404993644
+C,Lognormal: amostra pequena,10,0.9,t de Welch,0.05,0.078,0.0026817158686184487
+C,Lognormal: amostra pequena,10,0.9,t de Welch,0.01,0.0051,0.0007123194508084137
+C,Lognormal: amostra pequena,10,0.9,Mann-Whitney,0.05,0.5182,0.004996686502073149
+C,Lognormal: amostra pequena,10,0.9,Mann-Whitney,0.01,0.2317,0.004219183688819438
+D,Lognormal + 5% de outliers extremos,30,0.0,t de Welch,0.05,0.0292,0.0016836674255921208
+D,Lognormal + 5% de outliers extremos,30,0.0,t de Welch,0.01,0.0016,0.0003996798718974975
+D,Lognormal + 5% de outliers extremos,30,0.0,Mann-Whitney,0.05,0.0485,0.0021482027371735658
+D,Lognormal + 5% de outliers extremos,30,0.0,Mann-Whitney,0.01,0.0097,0.0009800974441350207
+D,Lognormal + 5% de outliers extremos,30,0.1,t de Welch,0.05,0.0298,0.0017003517283197614
+D,Lognormal + 5% de outliers extremos,30,0.1,t de Welch,0.01,0.0014,0.0003739037309254884
+D,Lognormal + 5% de outliers extremos,30,0.1,Mann-Whitney,0.05,0.0509,0.0021979351673786923
+D,Lognormal + 5% de outliers extremos,30,0.1,Mann-Whitney,0.01,0.0092,0.0009547439447307324
+D,Lognormal + 5% de outliers extremos,30,0.2,t de Welch,0.05,0.0292,0.0016836674255921208
+D,Lognormal + 5% de outliers extremos,30,0.2,t de Welch,0.01,0.002,0.0004467661580737735
+D,Lognormal + 5% de outliers extremos,30,0.2,Mann-Whitney,0.05,0.0598,0.002371159210175479
+D,Lognormal + 5% de outliers extremos,30,0.2,Mann-Whitney,0.01,0.0133,0.0011455614344067278
+D,Lognormal + 5% de outliers extremos,30,0.3,t de Welch,0.05,0.0346,0.0018276443855411262
+D,Lognormal + 5% de outliers extremos,30,0.3,t de Welch,0.01,0.0023,0.0004790313142165134
+D,Lognormal + 5% de outliers extremos,30,0.3,Mann-Whitney,0.05,0.0797,0.002708281927717275
+D,Lognormal + 5% de outliers extremos,30,0.3,Mann-Whitney,0.01,0.019,0.0013652472303579304
+D,Lognormal + 5% de outliers extremos,30,0.4,t de Welch,0.05,0.0407,0.0019759430659814065
+D,Lognormal + 5% de outliers extremos,30,0.4,t de Welch,0.01,0.0034,0.0005821030836544331
+D,Lognormal + 5% de outliers extremos,30,0.4,Mann-Whitney,0.05,0.1159,0.003201049671592117
+D,Lognormal + 5% de outliers extremos,30,0.4,Mann-Whitney,0.01,0.0321,0.0017626568015356816
+D,Lognormal + 5% de outliers extremos,30,0.5,t de Welch,0.05,0.0447,0.0020664440471495956
+D,Lognormal + 5% de outliers extremos,30,0.5,t de Welch,0.01,0.003,0.0005469003565550127
+D,Lognormal + 5% de outliers extremos,30,0.5,Mann-Whitney,0.05,0.1723,0.0037764098029742484
+D,Lognormal + 5% de outliers extremos,30,0.5,Mann-Whitney,0.01,0.0586,0.0023487451969083405
+D,Lognormal + 5% de outliers extremos,30,0.6,t de Welch,0.05,0.0524,0.002228323136351638
+D,Lognormal + 5% de outliers extremos,30,0.6,t de Welch,0.01,0.0045,0.0006693093455196931
+D,Lognormal + 5% de outliers extremos,30,0.6,Mann-Whitney,0.05,0.2766,0.0044731693462242185
+D,Lognormal + 5% de outliers extremos,30,0.6,Mann-Whitney,0.01,0.1125,0.0031598061649411343
+D,Lognormal + 5% de outliers extremos,30,0.7,t de Welch,0.05,0.0644,0.0024546413179933235
+D,Lognormal + 5% de outliers extremos,30,0.7,t de Welch,0.01,0.0063,0.0007912212080069645
+D,Lognormal + 5% de outliers extremos,30,0.7,Mann-Whitney,0.05,0.4108,0.004919790239430946
+D,Lognormal + 5% de outliers extremos,30,0.7,Mann-Whitney,0.01,0.1901,0.003923799051939332
+D,Lognormal + 5% de outliers extremos,30,0.8,t de Welch,0.05,0.0934,0.0029099216484297303
+D,Lognormal + 5% de outliers extremos,30,0.8,t de Welch,0.01,0.0108,0.0010336034055671449
+D,Lognormal + 5% de outliers extremos,30,0.8,Mann-Whitney,0.05,0.653,0.004760157560417512
+D,Lognormal + 5% de outliers extremos,30,0.8,Mann-Whitney,0.01,0.4026,0.004904214921880973
+D,Lognormal + 5% de outliers extremos,30,0.9,t de Welch,0.05,0.1269,0.0033286091690073803
+D,Lognormal + 5% de outliers extremos,30,0.9,t de Welch,0.01,0.0172,0.001300159990155058
+D,Lognormal + 5% de outliers extremos,30,0.9,Mann-Whitney,0.05,0.916,0.002773878151613729
+D,Lognormal + 5% de outliers extremos,30,0.9,Mann-Whitney,0.01,0.7622,0.004257360214968896
