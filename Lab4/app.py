@@ -22,6 +22,7 @@ from graficos import (
 
 # Link exigido no topo do dashboard
 LINK_REPOSITORIO = "https://github.com/GabrielRMA1/Lab-experimentacao-medicao-de-software"
+LINK_DASHBOARD = "https://experimentacao-medicao-de-software-lab4.streamlit.app"
 
 
 # Configuração da página
@@ -98,6 +99,7 @@ st.markdown(
 st.markdown(
     f"""
     - **Repositório / GitHub Projects:** {LINK_REPOSITORIO}
+    - **Dashboard:** {LINK_DASHBOARD}
     """
 )
 
