@@ -1,0 +1,13 @@
+n,teste,repeticoes,poder
+10,t de Welch,10000,0.0079
+10,Mann-Whitney,10000,0.0446
+30,t de Welch,10000,0.0162
+30,Mann-Whitney,10000,0.0608
+100,t de Welch,10000,0.0341
+100,Mann-Whitney,10000,0.0959
+300,t de Welch,10000,0.0494
+300,Mann-Whitney,10000,0.1955
+1000,t de Welch,2000,0.105
+1000,Mann-Whitney,2000,0.5095
+2000,t de Welch,2000,0.1445
+2000,Mann-Whitney,2000,0.8155
