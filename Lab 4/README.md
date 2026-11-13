@@ -76,7 +76,7 @@ O sorteio evita escolher PRs olhando seus tempos e permite repetir a mesma amost
 
 ```bash
 pip install -r requirements.txt
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 O `app.py` gera automaticamente os arquivos de simulação que estiverem faltando em `data/`, então esse único comando roda tudo do início ao fim. Para regenerar só as simulações, sem abrir o dashboard: `python simulacao.py` e `python simulacoes.py`.
