@@ -3,8 +3,6 @@
 **Grupo:** Leonardo, Gabriel, Pedro Henrique  
 **Software:** Blender (modelagem, animação e renderização 3D de código aberto), versões **4.5 LTS × 5.2 LTS**
 
-> Partes de Gabriel (plano de coleta e piloto) e de Pedro Henrique (plano de análise) estão nos arquivos deles e entram no pacote da S1 junto com este.
-
 ---
 
 ## 1. Software escolhido e evidências dos três critérios

@@ -10,7 +10,7 @@
 |---|---|
 | Tratamentos | Blender **4.5 LTS** (referência) e **5.2 LTS** |
 | Cargas | `diffuse`: materiais difusos, 4 rebatimentos de luz. `glass`: vidro, metal e superfícies polidas, 12 rebatimentos |
-| Cena | Chão com 30 esferas e 2 luzes de área, **gerada por código** (`blender_scene_render.py`, escrito por Leonardo e guardado em `leonardo/scripts/`; o `blender_bench.py` o encontra sozinho), idêntica nas duas versões |
+| Cena | Chão com 30 esferas e 2 luzes de área, **gerada por código** (`blender_scene_render.py`, escrito por Leonardo e guardado em `scripts/`; o `blender_bench.py` o encontra sozinho), idêntica nas duas versões |
 | Células | 2 versões × 2 cargas = **4** |
 | Repetições | Piloto: 3 por célula. Coleta completa: **20** por célula (80 renders) |
 | Parâmetros fixos | Cycles em CPU, 64 amostras por pixel, 640×360, **4 threads fixas**, denoiser desligado, amostragem adaptativa desligada, semente do Cycles = 0 |
@@ -90,11 +90,3 @@ Piloto executado com `blender_bench.py pilot` (3 repetições por célula, 12 re
 **Atenção:** com 3 repetições por célula, esses números servem só para verificar que a coleta funciona e é estável. **Não são resultado do estudo e não devem ser usados para concluir qual versão é mais rápida.** A comparação com teste estatístico é feita na Sprint 2, com 20 repetições por célula.
 
 **Critério para seguir para a coleta completa:** todos os processos com código 0, CV% por célula abaixo de 10%, versões corretas no `blender_version` e brilho médio parecido entre versões. Se o CV% for alto, feche programas em segundo plano, confira a tomada e aumente `--samples` para 128 (renders mais longos diluem o ruído), e repita o piloto.
-
-## 7. Checklist de entrega (Gabriel, S1)
-
-- [ ] Versões 4.5 LTS e 5.2 LTS baixadas e caminhos anotados.
-- [ ] `check` executado e `env_snapshot.txt` gerado.
-- [ ] Piloto executado e `raw_pilot.csv` versionado no repositório.
-- [ ] Tabela da seção 6 preenchida.
-- [ ] Hardware do computador anotado.
