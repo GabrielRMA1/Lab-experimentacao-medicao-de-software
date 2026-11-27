@@ -1,0 +1,17 @@
+# Snapshot do ambiente - 2026-11-26T13:40:38Z
+## Máquina
+SO: Windows-11-10.0.26200-SP0
+CPU: Intel64 Family 6 Model 142 Stepping 12, GenuineIntel
+Núcleos lógicos: 8
+RAM: não detectado (anote manualmente)
+Python: 3.12.4
+(anote à mão: notebook ou desktop, ligado na tomada, modo de energia, temperatura ambiente)
+## Blender
+[4.5] C:\Users\leoga\Desktop\BlenderExperimento\Blender 4.5\blender-4.5.17-windows-x64\blender.exe
+Blender 4.5.17 LTS | 	build date: 2026-11-24 | 	build time: 01:33:45 | 	build commit date: 2026-11-23 | 	build commit time: 15:05 | 	build hash: 2f5ec98689b8 | 	build branch: blender-v4.5-release | 	build platform: Windows | 	build type: Release | 	build c flags: /W3 /w34062 /w34100 /w34115 /w34189 /w35038 /wd4018 /wd4146 /wd4065 /wd4127 /wd4181 /wd4200 /wd4244 /wd4267 /wd4305 /wd4800 /wd4828 /wd4996 /wd4661 /wd4848 /we4013 /we4133 /we4431 /we4033 /DWIN32 /D_WINDOWS /W3 /nologo /J /Gd /MP /bigobj /Zc:inline   | 	build c++ flags: /W3 /w34062 /w34100 /w34115 /w34189 /w35038 /wd4018 /wd4146 /wd4065 /wd4127 /wd4181 /wd4200 /wd4244 /wd4267 /wd4305 /wd4800 /wd4828 /wd4996 /wd4661 /wd4848 /we4013 /we4133 /we4431 /we4033 /DWIN32 /D_WINDOWS /W3  /EHsc /nologo /J /Gd /MP /EHsc /bigobj /permissive- /Zc:__cplusplus /Zc:inline   | 	build link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221 | 	build system: CMake
+[5.2] C:\Users\leoga\Desktop\BlenderExperimento\Blender 5.algo\blender-5.2.4-windows-x64\blender.exe
+Blender 5.2.4 LTS | 	build date: 2026-11-10 | 	build time: 01:34:34 | 	build commit date: 2026-11-09 | 	build commit time: 14:30 | 	build hash: cd5dc428cce1 | 	build branch: blender-v5.2-release | 	build platform: Windows | 	build type: Release | 	build c flags:  /W3 -Werror=implicit-function-declaration -Werror=return-type -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wstrict-prototypes -Wmissing-prototypes -Wunused-parameter -Wundef -Wundef-prefix -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /MP /nologo /J /Gy /Gd /showFilenames -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2  | 	build c++ flags:  /W3 -Wno-tautological-compare -Wno-unknown-pragmas -Wno-char-subscripts -Wno-overloaded-virtual -Wno-sign-compare -Wno-invalid-offsetof -Wno-suggest-override -Wundef -Wundef-prefix -Wunused-parameter -Wmismatched-tags -Werror=unguarded-availability-new /DWIN32 /D_WINDOWS /EHsc  /Gy /MP /nologo /J /Gd /showFilenames /EHsc -Wno-unused-command-line-argument -Wno-microsoft-enum-forward-reference /clang:-funsigned-char /clang:-fno-strict-aliasing /clang:-ffp-contract=off -march=x86-64-v2  | 	build link flags: /MACHINE:X64  /SUBSYSTEM:CONSOLE /STACK:2097152 /ignore:4049 /ignore:4217 /ignore:4221 | 	build system: CMake
+## Parâmetros do experimento
+motor=Cycles CPU  samples=64  threads=4  resolução=640x360
+pausa=3.0s  semente da ordem=2026  cargas=['diffuse', 'glass']
+denoising=desligado  amostragem adaptativa=desligada  semente do Cycles=0
