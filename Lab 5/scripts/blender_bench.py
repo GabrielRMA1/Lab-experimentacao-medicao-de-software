@@ -35,11 +35,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-# A cena é definida por Leonardo (método) e fica em leonardo/scripts/ no repositório.
+# A cena é definida por Leonardo (método) e fica em scripts/ no repositório.
 # Procura primeiro ao lado deste arquivo e depois na pasta do repositório.
 _SCENE_CANDIDATES = [
     HERE / "blender_scene_render.py",
-    HERE.parent.parent / "leonardo" / "scripts" / "blender_scene_render.py",
+    HERE.parent.parent / "scripts" / "blender_scene_render.py",
 ]
 SCENE_SCRIPT = next((c for c in _SCENE_CANDIDATES if c.exists()), _SCENE_CANDIDATES[-1])
 WORKLOADS = ["diffuse", "glass"]
